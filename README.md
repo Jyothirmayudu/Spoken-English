@@ -56,6 +56,7 @@ You'll see something like:
 ```
 ============================================================
  First run: a default admin account has been created.
+   Username: admin
    Email:    admin@speakpath.local
    Password: admin123
  Log in via the Admin tab, then change this password from
@@ -123,6 +124,7 @@ help moving to that route later.
 
 On first run only, one admin account is created automatically:
 
+- Username: `admin`
 - Email: `admin@speakpath.local`
 - Password: `admin123`
 

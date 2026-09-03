@@ -10,6 +10,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     name          TEXT NOT NULL,
+    username      TEXT NOT NULL UNIQUE,
     email         TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role          TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student','admin')),
@@ -29,19 +30,42 @@ db.exec(`
   );
 `);
 
+// Lightweight migration: if this is an existing database from before
+// usernames were introduced, add the column and backfill values instead
+// of requiring you to delete your database and start over.
+const userColumns = db.prepare(`PRAGMA table_info(users)`).all().map(c => c.name);
+if(!userColumns.includes('username')){
+  db.exec(`ALTER TABLE users ADD COLUMN username TEXT`);
+  const usersWithoutUsername = db.prepare(`SELECT id, email FROM users WHERE username IS NULL`).all();
+  usersWithoutUsername.forEach(u => {
+    const base = (u.email.split('@')[0] || ('user' + u.id)).toLowerCase().replace(/[^a-z0-9_]/g, '') || ('user' + u.id);
+    let candidate = base;
+    let n = 1;
+    while(db.prepare(`SELECT id FROM users WHERE username = ? AND id != ?`).get(candidate, u.id)){
+      candidate = base + n;
+      n++;
+    }
+    db.prepare(`UPDATE users SET username = ? WHERE id = ?`).run(candidate, u.id);
+  });
+  db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username)`);
+  console.log('Database upgraded: added usernames for existing accounts (derived from their email address).');
+}
+
 // Seed one default admin account on first run, so there's always a way in.
 const adminExists = db.prepare(`SELECT id FROM users WHERE role = 'admin' LIMIT 1`).get();
 if(!adminExists){
+  const defaultUsername = 'admin';
   const defaultEmail = 'admin@speakpath.local';
   const defaultPassword = 'admin123';
   const hash = bcrypt.hashSync(defaultPassword, 10);
   const info = db.prepare(
-    `INSERT INTO users (name, email, password_hash, role, status) VALUES (?, ?, ?, 'admin', 'active')`
-  ).run('Administrator', defaultEmail, hash);
+    `INSERT INTO users (name, username, email, password_hash, role, status) VALUES (?, ?, ?, ?, 'admin', 'active')`
+  ).run('Administrator', defaultUsername, defaultEmail, hash);
   db.prepare(`INSERT INTO progress (user_id) VALUES (?)`).run(info.lastInsertRowid);
 
   console.log('\n============================================================');
   console.log(' First run: a default admin account has been created.');
+  console.log(`   Username: ${defaultUsername}`);
   console.log(`   Email:    ${defaultEmail}`);
   console.log(`   Password: ${defaultPassword}`);
   console.log(' Log in via the Admin tab, then change this password from');

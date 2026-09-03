@@ -60,10 +60,10 @@ function hideAuthError(){
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   hideAuthError();
-  const email = document.getElementById('login-email').value.trim();
+  const identifier = document.getElementById('login-identifier').value.trim();
   const password = document.getElementById('login-password').value;
   try{
-    const data = await apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    const data = await apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ identifier, password }) });
     await handleAuthSuccess(data.user);
   }catch(err){ showAuthError(err.message); }
 });
@@ -72,10 +72,16 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   hideAuthError();
   const name = document.getElementById('signup-name').value.trim();
+  const username = document.getElementById('signup-username').value.trim();
   const email = document.getElementById('signup-email').value.trim();
   const password = document.getElementById('signup-password').value;
+  const confirmPassword = document.getElementById('signup-confirm-password').value;
+  if(password !== confirmPassword){
+    showAuthError('Passwords do not match.');
+    return;
+  }
   try{
-    const data = await apiFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ name, email, password }) });
+    const data = await apiFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ name, username, email, password, confirmPassword }) });
     await handleAuthSuccess(data.user);
   }catch(err){ showAuthError(err.message); }
 });
@@ -83,10 +89,10 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
 document.getElementById('admin-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   hideAuthError();
-  const email = document.getElementById('admin-email').value.trim();
+  const identifier = document.getElementById('admin-identifier').value.trim();
   const password = document.getElementById('admin-password').value;
   try{
-    const data = await apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    const data = await apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ identifier, password }) });
     if(data.user.role !== 'admin'){
       await apiFetch('/api/auth/logout', { method: 'POST' });
       showAuthError("This account doesn't have admin access — use the Log in tab instead.");
@@ -260,6 +266,7 @@ document.getElementById('export-progress-btn').addEventListener('click', () => {
 function showView(id){
   window.speechSynthesis.cancel();
   resetAllListenGroups();
+  window.scrollTo(0, 0);
   ['view-dashboard', 'view-level', 'view-quiz', 'view-results', 'view-profile', 'view-admin'].forEach(v => {
     document.getElementById(v).classList.toggle('hidden', v !== id);
   });
