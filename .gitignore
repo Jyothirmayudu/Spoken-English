@@ -1,0 +1,8 @@
+node_modules/
+.env
+db/speakpath.db
+db/speakpath.db-journal
+db/speakpath.db-wal
+db/speakpath.db-shm
+*.log
+.DS_Store
