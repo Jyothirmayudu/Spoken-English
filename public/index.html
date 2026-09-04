@@ -118,6 +118,7 @@
         <p>Here's where your spoken English practice stands today.</p>
         <div class="progress-file-row">
           <button class="btn btn-ghost small-btn" id="export-progress-btn" type="button">⬇ Export progress (JSON)</button>
+          <button class="btn btn-ghost small-btn" id="print-dashboard-btn" type="button">🖨 Print dashboard</button>
         </div>
         <p class="progress-file-note">Your progress is saved on the server against your account. Export any time for a personal backup file.</p>
       </div>
@@ -139,6 +140,25 @@
 
       <h2 class="section-title">Your levels</h2>
       <div class="level-grid" id="level-grid"></div>
+
+      <div class="divider-line"></div>
+
+      <div id="class-picker-card" class="class-picker-card hidden">
+        <h2 class="section-title" style="margin-bottom:8px;">🏫 Choose your class</h2>
+        <p style="color:var(--ink-soft);font-size:14px;margin:0 0 16px;">Pick your class to see subjects and quizzes for your level.</p>
+        <div class="class-btn-row" id="class-btn-row"></div>
+      </div>
+
+      <div id="subjects-section" class="hidden">
+        <div class="subjects-header-row">
+          <h2 class="section-title" style="margin-bottom:4px;">🏫 Class <span id="subjects-class-label">3</span> — School Subjects</h2>
+          <button class="btn btn-ghost small-btn" id="change-class-btn" type="button">Change class</button>
+        </div>
+        <div class="search-bar-row">
+          <input class="text-input search-input" id="subject-search-input" type="text" placeholder="🔍 Search your subjects, topics, or progress...">
+        </div>
+        <div class="level-grid" id="subject-grid"></div>
+      </div>
     </div>
 
     <!-- ---------- LEVEL DETAIL ---------- -->
@@ -201,8 +221,9 @@
           <h2 id="result-title">Nice work!</h2>
           <p id="result-sub">You passed Level 1 and unlocked Level 2.</p>
           <div class="result-actions">
-            <button class="btn btn-ghost" onclick="goLevel(currentLevel)">Review this level</button>
+            <button class="btn btn-ghost" id="review-level-btn" onclick="goLevel(currentLevel)">Review this level</button>
             <button class="btn btn-primary" onclick="goDashboard()">Back to dashboard</button>
+            <button class="btn btn-ghost" id="print-results-btn" type="button">🖨 Print results</button>
           </div>
         </div>
         <div class="review-section">
@@ -219,7 +240,10 @@
         <button class="back-link" onclick="goDashboard()">← Back to dashboard</button>
       </div>
       <div class="profile-shell">
-        <h1 style="font-size:26px;margin:0 0 24px;">Your profile</h1>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:24px;">
+          <h1 style="font-size:26px;margin:0;">Your profile</h1>
+          <button class="btn btn-ghost small-btn" id="print-profile-btn" type="button">🖨 Print profile</button>
+        </div>
 
         <div id="profile-error" class="msg-box msg-error hidden"></div>
         <div id="profile-success" class="msg-box msg-success hidden"></div>
@@ -305,7 +329,21 @@
   <div class="student-detail-panel" id="student-detail-panel"></div>
 </div>
 
+<!-- ---------- Mythology variant picker modal ---------- -->
+<div id="variant-picker-backdrop" class="student-detail-backdrop hidden">
+  <div class="student-detail-panel" style="max-width:420px;text-align:center;">
+    <h2 style="font-size:19px;margin:0 0 8px;">Choose your epic</h2>
+    <p style="color:var(--ink-soft);font-size:13.5px;margin:0 0 22px;">Pick which story you'd like to be quizzed on.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+      <button class="btn btn-primary variant-choice-btn" data-variant="ramayana" style="flex:1;min-width:140px;">📜 Ramayana</button>
+      <button class="btn btn-primary variant-choice-btn" data-variant="mahabharata" style="flex:1;min-width:140px;">📜 Mahabharata</button>
+    </div>
+    <button class="btn btn-ghost small-btn" id="variant-cancel-btn" style="margin-top:16px;">Cancel</button>
+  </div>
+</div>
+
 <script src="js/content.js"></script>
+<script src="js/subjects.js"></script>
 <script src="js/speech.js"></script>
 <script src="js/app.js"></script>
 </body>

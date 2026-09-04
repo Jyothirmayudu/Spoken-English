@@ -1,8 +1,16 @@
 const path = require('path');
+const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const Database = require('better-sqlite3');
 
-const db = new Database(path.join(__dirname, 'speakpath.db'));
+// Where the SQLite file lives. Locally this defaults to db/speakpath.db.
+// On a host with ephemeral storage, set the DB_PATH environment variable
+// to a location on a mounted persistent disk (e.g. /data/speakpath.db) —
+// otherwise every redeploy or restart will silently wipe your data.
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'speakpath.db');
+fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+
+const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
@@ -17,18 +25,30 @@ db.exec(`
     status        TEXT NOT NULL DEFAULT 'active'  CHECK (status IN ('active','terminated')),
     profile_pic   TEXT,
     bio           TEXT,
+    class_level   INTEGER,
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
   CREATE TABLE IF NOT EXISTS progress (
-    user_id           INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    completed_json     TEXT NOT NULL DEFAULT '[]',
-    level_scores_json  TEXT NOT NULL DEFAULT '{}',
-    quiz_stats_json    TEXT NOT NULL DEFAULT '{}',
-    unlocked_json      TEXT NOT NULL DEFAULT '[1]',
-    updated_at         TEXT NOT NULL DEFAULT (datetime('now'))
+    user_id            INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    completed_json      TEXT NOT NULL DEFAULT '[]',
+    level_scores_json   TEXT NOT NULL DEFAULT '{}',
+    quiz_stats_json     TEXT NOT NULL DEFAULT '{}',
+    subject_stats_json  TEXT NOT NULL DEFAULT '{}',
+    unlocked_json       TEXT NOT NULL DEFAULT '[1]',
+    updated_at          TEXT NOT NULL DEFAULT (datetime('now'))
   );
 `);
+
+// Migrations for databases created before class_level / subject_stats_json existed.
+const userColumnsNow = db.prepare(`PRAGMA table_info(users)`).all().map(c => c.name);
+if(!userColumnsNow.includes('class_level')){
+  db.exec(`ALTER TABLE users ADD COLUMN class_level INTEGER`);
+}
+const progressColumnsNow = db.prepare(`PRAGMA table_info(progress)`).all().map(c => c.name);
+if(!progressColumnsNow.includes('subject_stats_json')){
+  db.exec(`ALTER TABLE progress ADD COLUMN subject_stats_json TEXT NOT NULL DEFAULT '{}'`);
+}
 
 // Lightweight migration: if this is an existing database from before
 // usernames were introduced, add the column and backfill values instead

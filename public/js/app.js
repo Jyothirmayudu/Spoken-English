@@ -230,6 +230,7 @@ function buildLevelBreakdown(prog){
         incorrectAnswers: qStats.incorrect,
         skippedQuestions: qStats.skipped,
         lastAttempt: qStats.lastAttempt,
+        questionResults: qStats.questions || [],
       } : { attempted: false }
     };
   });
@@ -259,6 +260,10 @@ document.getElementById('export-progress-btn').addEventListener('click', () => {
   a.remove();
   URL.revokeObjectURL(url);
 });
+
+document.getElementById('print-dashboard-btn').addEventListener('click', () => window.print());
+document.getElementById('print-results-btn').addEventListener('click', () => window.print());
+document.getElementById('print-profile-btn').addEventListener('click', () => window.print());
 
 /* ============================================================
    NAVIGATION
@@ -317,11 +322,141 @@ function renderDashboard(){
     }
     grid.appendChild(card);
   });
+
+  renderClassAndSubjectsSection();
 }
 
 /* ============================================================
-   LEVEL DETAIL
+   CLASS SELECTION + SCHOOL SUBJECTS
    ============================================================ */
+function renderClassAndSubjectsSection(){
+  const pickerCard = document.getElementById('class-picker-card');
+  const subjectsSection = document.getElementById('subjects-section');
+
+  if(!currentUser.classLevel){
+    pickerCard.classList.remove('hidden');
+    subjectsSection.classList.add('hidden');
+    renderClassButtons();
+  }else{
+    pickerCard.classList.add('hidden');
+    subjectsSection.classList.remove('hidden');
+    document.getElementById('subjects-class-label').textContent = currentUser.classLevel;
+    renderSubjectGrid(currentUser.classLevel);
+  }
+}
+
+function renderClassButtons(){
+  const row = document.getElementById('class-btn-row');
+  row.innerHTML = '';
+  for(let c = 3; c <= 10; c++){
+    const btn = document.createElement('button');
+    btn.className = 'class-btn';
+    btn.textContent = `Class ${c}`;
+    btn.addEventListener('click', () => chooseClass(c));
+    row.appendChild(btn);
+  }
+}
+
+async function chooseClass(classLevel){
+  try{
+    const data = await apiFetch('/api/auth/me/class', { method: 'PUT', body: JSON.stringify({ classLevel }) });
+    currentUser = data.user;
+    renderClassAndSubjectsSection();
+  }catch(err){ alert(err.message); }
+}
+
+document.getElementById('change-class-btn').addEventListener('click', () => {
+  document.getElementById('class-picker-card').classList.remove('hidden');
+  document.getElementById('subjects-section').classList.add('hidden');
+  renderClassButtons();
+});
+
+function renderSubjectGrid(classLevel){
+  const grid = document.getElementById('subject-grid');
+  grid.innerHTML = '';
+  const subjects = SUBJECTS.filter(s => classLevel >= s.minClass && classLevel <= s.maxClass);
+
+  subjects.forEach(subject => {
+    let statusLine = 'Not tried yet';
+    let pct = 0;
+    if(subject.available){
+      if(subject.hasVariants){
+        const attempts = ['ramayana', 'mahabharata']
+          .map(v => progress.subjectStats[subject.id + '_' + v])
+          .filter(Boolean);
+        if(attempts.length){
+          const best = attempts.sort((a, b) => b.scorePercent - a.scorePercent)[0];
+          statusLine = `Best: ${best.scorePercent}%`;
+          pct = best.scorePercent;
+        }
+      }else{
+        const stat = progress.subjectStats[subject.id];
+        if(stat){ statusLine = `Score: ${stat.scorePercent}%`; pct = stat.scorePercent; }
+      }
+    }
+
+    const card = document.createElement('div');
+    card.className = 'level-card subject-card';
+    card.dataset.searchText = (subject.title + ' ' + subject.description).toLowerCase();
+    card.innerHTML = `
+      <span class="lv-icon subject-icon">${subject.icon}</span>
+      <h3>${subject.title}</h3>
+      <p class="lv-desc">${subject.description}</p>
+      ${subject.available ? `
+        <div class="progress-track"><div class="progress-fill quiz-fill" style="width:${pct}%"></div></div>
+        <p class="subject-status ${pct >= 70 ? 'good' : ''}">${statusLine}</p>
+        <button class="btn btn-primary lv-cta subject-open-btn" type="button">Open quiz →</button>
+      ` : `
+        <p class="subject-status coming-soon">Coming soon</p>
+        <button class="btn btn-ghost lv-cta" disabled>Open quiz →</button>
+      `}
+    `;
+    if(subject.available){
+      card.querySelector('.subject-open-btn').addEventListener('click', () => openSubject(subject));
+    }
+    grid.appendChild(card);
+  });
+}
+
+function openSubject(subject){
+  if(subject.hasVariants){
+    document.getElementById('variant-picker-backdrop').classList.remove('hidden');
+    document.getElementById('variant-picker-backdrop').dataset.subjectId = subject.id;
+    return;
+  }
+  if(subject.id === 'history'){
+    startSubjectQuiz('history', HISTORY_CULTURE_QUIZ.questions, { label: HISTORY_CULTURE_QUIZ.title });
+  }else if(subject.id === 'sportsgk'){
+    startSubjectQuiz('sportsgk', SPORTS_GK_QUIZ.questions, { label: SPORTS_GK_QUIZ.title });
+  }else if(subject.id === 'social'){
+    startSubjectQuiz('social', buildStateCapitalQuiz(10), { label: 'Social Studies: State & Capital' });
+  }
+}
+
+document.querySelectorAll('.variant-choice-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const variant = btn.dataset.variant;
+    document.getElementById('variant-picker-backdrop').classList.add('hidden');
+    const data = MYTHOLOGY_QUIZZES[variant];
+    startSubjectQuiz('mythology', data.questions, { variant, label: `Indian Mythology: ${data.label}` });
+  });
+});
+document.getElementById('variant-cancel-btn').addEventListener('click', () => {
+  document.getElementById('variant-picker-backdrop').classList.add('hidden');
+});
+
+// Search bar: filters the student's own subject cards (and Spoken English
+// level cards) by title/description text. This searches the signed-in
+// student's own dashboard only — not other students' profiles or the
+// open web (see note in chat about why those are handled differently).
+document.getElementById('subject-search-input').addEventListener('input', (e) => {
+  const term = e.target.value.trim().toLowerCase();
+  document.querySelectorAll('#subject-grid .subject-card').forEach(card => {
+    const match = !term || card.dataset.searchText.includes(term);
+    card.style.display = match ? '' : 'none';
+  });
+});
+
 function renderLevel(levelId){
   const level = LEVELS.find(l => l.id === levelId);
   document.getElementById('lv-tag').textContent = `LEVEL ${level.id}`;
@@ -462,21 +597,40 @@ function launchCelebration(){
 
 /* ============================================================
    QUIZ
+   quizState.mode is 'level' (Spoken English) or 'subject' (school
+   subjects). Both share the same rendering — only finishQuiz()
+   branches on where results get saved and what messaging shows.
    ============================================================ */
 function startQuiz(levelId){
   const level = LEVELS.find(l => l.id === levelId);
-  quizState = { levelId, qIndex: 0, score: 0, answered: false, selected: null, answers: [] };
+  quizState = {
+    mode: 'level',
+    meta: { levelId },
+    questions: level.quiz,
+    qIndex: 0, score: 0, answered: false, selected: null, answers: [],
+  };
   showView('view-quiz');
-  renderQuestion(level);
+  renderQuestion();
 }
 
-function renderQuestion(level){
-  const q = level.quiz[quizState.qIndex];
+function startSubjectQuiz(subjectId, questions, meta){
+  quizState = {
+    mode: 'subject',
+    meta: { subjectId, ...meta },
+    questions: questions,
+    qIndex: 0, score: 0, answered: false, selected: null, answers: [],
+  };
+  showView('view-quiz');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = quizState.questions[quizState.qIndex];
   quizState.answered = false;
   quizState.selected = null;
 
-  document.getElementById('quiz-progress-label').textContent = `Question ${quizState.qIndex + 1} of ${level.quiz.length}`;
-  document.getElementById('quiz-progress-fill').style.width = `${(quizState.qIndex / level.quiz.length) * 100}%`;
+  document.getElementById('quiz-progress-label').textContent = `Question ${quizState.qIndex + 1} of ${quizState.questions.length}`;
+  document.getElementById('quiz-progress-fill').style.width = `${(quizState.qIndex / quizState.questions.length) * 100}%`;
   document.getElementById('q-number-badge').textContent = `Q${quizState.qIndex + 1}`;
   document.getElementById('q-text').innerHTML = wrapWordsHTML(q.q);
 
@@ -487,7 +641,7 @@ function renderQuestion(level){
     const btn = document.createElement('button');
     btn.className = 'opt-btn';
     btn.innerHTML = `<span class="opt-letter">${letters[idx]}</span><span>${wrapWordsHTML(opt)}</span>`;
-    btn.addEventListener('click', () => selectOption(idx, level));
+    btn.addEventListener('click', () => selectOption(idx));
     optList.appendChild(btn);
   });
 
@@ -525,21 +679,21 @@ function renderQuestion(level){
 
   const skipBtn = document.getElementById('quiz-skip-btn');
   skipBtn.classList.remove('hidden');
-  skipBtn.onclick = () => skipQuestion(level);
+  skipBtn.onclick = () => skipQuestion();
 
   const nextBtn = document.getElementById('quiz-next-btn');
   nextBtn.textContent = 'Check answer';
   nextBtn.disabled = true;
-  nextBtn.onclick = () => checkAnswer(level);
+  nextBtn.onclick = () => checkAnswer();
 }
 
-function skipQuestion(level){
+function skipQuestion(){
   if(quizState.answered) return;
-  const q = level.quiz[quizState.qIndex];
+  const q = quizState.questions[quizState.qIndex];
   quizState.answered = true;
   quizState.answers.push({ question: q.q, opts: q.opts, selected: null, correctIdx: q.a, explain: q.explain, skipped: true });
   document.getElementById('quiz-skip-btn').classList.add('hidden');
-  advanceQuiz(level);
+  advanceQuiz();
 }
 
 function selectOption(idx){
@@ -551,8 +705,8 @@ function selectOption(idx){
   document.getElementById('quiz-next-btn').disabled = false;
 }
 
-function checkAnswer(level){
-  const q = level.quiz[quizState.qIndex];
+function checkAnswer(){
+  const q = quizState.questions[quizState.qIndex];
   if(quizState.answered) return;
   quizState.answered = true;
   document.getElementById('quiz-skip-btn').classList.add('hidden');
@@ -575,42 +729,69 @@ function checkAnswer(level){
   fb.appendChild(createListenGroup(null, spanTokens(fb)));
 
   const nextBtn = document.getElementById('quiz-next-btn');
-  nextBtn.textContent = quizState.qIndex < level.quiz.length - 1 ? 'Next question' : 'See results';
+  nextBtn.textContent = quizState.qIndex < quizState.questions.length - 1 ? 'Next question' : 'See results';
   nextBtn.disabled = false;
-  nextBtn.onclick = () => advanceQuiz(level);
+  nextBtn.onclick = () => advanceQuiz();
 }
 
-function advanceQuiz(level){
-  if(quizState.qIndex < level.quiz.length - 1){
+function advanceQuiz(){
+  if(quizState.qIndex < quizState.questions.length - 1){
     quizState.qIndex++;
-    renderQuestion(level);
+    renderQuestion();
   } else {
-    finishQuiz(level);
+    finishQuiz();
   }
 }
 
-function finishQuiz(level){
-  const pct = Math.round((quizState.score / level.quiz.length) * 100);
-  progress.levelScores[level.id] = pct;
-
+function finishQuiz(){
+  const pct = Math.round((quizState.score / quizState.questions.length) * 100);
   const incorrectCount = quizState.answers.filter(a => !a.skipped && a.selected !== a.correctIdx).length;
   const skippedCount = quizState.answers.filter(a => a.skipped).length;
-  progress.quizStats[level.id] = {
-    total: level.quiz.length,
+  const questionResults = quizState.answers.map((a, i) => ({
+    questionNumber: i + 1,
+    question: a.question,
+    options: a.opts,
+    yourAnswer: a.skipped ? null : a.opts[a.selected],
+    correctAnswer: a.opts[a.correctIdx],
+    result: a.skipped ? 'skipped' : (a.selected === a.correctIdx ? 'correct' : 'incorrect'),
+  }));
+  const statsEntry = {
+    total: quizState.questions.length,
     correct: quizState.score,
     incorrect: incorrectCount,
     skipped: skippedCount,
     scorePercent: pct,
     lastAttempt: new Date().toISOString(),
+    questions: questionResults,
   };
 
-  const passed = pct >= 70;
-  if(passed){
-    const nextId = level.id + 1;
-    const nextLevel = LEVELS.find(l => l.id === nextId);
-    if(nextLevel && !progress.unlocked.includes(nextId)){
-      progress.unlocked.push(nextId);
+  let passed = false;
+  let resultSubText = '';
+
+  if(quizState.mode === 'level'){
+    const level = LEVELS.find(l => l.id === quizState.meta.levelId);
+    progress.levelScores[level.id] = pct;
+    progress.quizStats[level.id] = statsEntry;
+    passed = pct >= 70;
+    if(passed){
+      const nextId = level.id + 1;
+      const nextLevel = LEVELS.find(l => l.id === nextId);
+      if(nextLevel && !progress.unlocked.includes(nextId)){
+        progress.unlocked.push(nextId);
+      }
     }
+    const nextLevel = LEVELS.find(l => l.id === level.id + 1);
+    resultSubText = passed
+      ? (nextLevel ? `You passed Level ${level.id} and unlocked Level ${nextLevel.id}.` : `You passed Level ${level.id} — that's the final level complete!`)
+      : `You scored ${pct}%. You need 70% to unlock the next level — review the concepts and try again.`;
+  }else{
+    const key = quizState.meta.subjectId + (quizState.meta.variant ? '_' + quizState.meta.variant : '');
+    statsEntry.label = quizState.meta.label;
+    progress.subjectStats[key] = statsEntry;
+    passed = pct >= 70;
+    resultSubText = passed
+      ? `Nice work on ${quizState.meta.label}! You scored ${pct}%.`
+      : `You scored ${pct}% on ${quizState.meta.label}. Have another go whenever you're ready.`;
   }
   saveProgress(progress);
 
@@ -619,10 +800,13 @@ function finishQuiz(level){
   ring.textContent = pct + '%';
   ring.className = 'result-ring ' + (passed ? 'pass' : 'fail');
   document.getElementById('result-title').textContent = passed ? 'Nice work!' : 'Almost there';
-  const nextLevel = LEVELS.find(l => l.id === level.id + 1);
-  document.getElementById('result-sub').textContent = passed
-    ? (nextLevel ? `You passed Level ${level.id} and unlocked Level ${nextLevel.id}.` : `You passed Level ${level.id} — that's the final level complete!`)
-    : `You scored ${pct}%. You need 70% to unlock the next level — review the concepts and try again.`;
+  document.getElementById('result-sub').textContent = resultSubText;
+
+  // "Review this level" only makes sense for the Spoken English course.
+  const reviewLevelBtn = document.getElementById('review-level-btn');
+  if(reviewLevelBtn){
+    reviewLevelBtn.classList.toggle('hidden', quizState.mode !== 'level');
+  }
 
   const reviewList = document.getElementById('review-list');
   reviewList.innerHTML = '';
@@ -781,13 +965,14 @@ function renderStudentGrid(containerId, students, isTerminated){
       <div class="student-card-head">
         <span class="student-avatar">${s.profilePic ? `<img src="${s.profilePic}" alt="">` : s.name[0].toUpperCase()}</span>
         <div>
-          <p class="student-name">${s.name}</p>
+          <p class="student-name">${s.name} ${s.classLevel ? `<span class="role-badge">Class ${s.classLevel}</span>` : ''}</p>
           <p class="student-email">${s.email}</p>
         </div>
       </div>
       <div class="student-stat-line"><span>Concepts</span><span>${s.conceptsCompleted}/${total} (${conceptsPct}%)</span></div>
       <div class="student-stat-line"><span>Levels unlocked</span><span>${s.levelsUnlocked}/${LEVELS.length}</span></div>
       <div class="student-stat-line"><span>Avg. quiz score</span><span>${s.averageQuizScore !== null ? s.averageQuizScore + '%' : '—'}</span></div>
+      <div class="student-stat-line"><span>Subject quizzes tried</span><span>${s.subjectQuizzesAttempted}</span></div>
       <div class="student-card-actions">
         <button class="btn btn-ghost view-profile-btn" type="button">View profile</button>
         <button class="btn ${isTerminated ? 'btn-primary' : 'btn-ghost'} toggle-status-btn" type="button">${isTerminated ? 'Reactivate' : 'Terminate'}</button>
@@ -823,13 +1008,13 @@ async function openStudentDetail(id){
       <div class="student-card-head" style="margin-bottom:18px;">
         <span class="student-avatar" style="width:52px;height:52px;font-size:20px;">${s.profilePic ? `<img src="${s.profilePic}" alt="">` : s.name[0].toUpperCase()}</span>
         <div>
-          <p class="student-name" style="font-size:17px;">${s.name}</p>
+          <p class="student-name" style="font-size:17px;">${s.name} ${s.classLevel ? `<span class="role-badge">Class ${s.classLevel}</span>` : ''}</p>
           <p class="student-email">${s.email}</p>
           <span class="role-badge" style="margin-left:0;background:${s.status === 'active' ? 'var(--primary-tint)' : 'var(--danger-tint)'};color:${s.status === 'active' ? 'var(--primary-dark)' : 'var(--danger)'};">${s.status}</span>
         </div>
       </div>
       ${s.bio ? `<p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:18px;">${s.bio}</p>` : ''}
-      <h3 style="font-size:15px;margin:0 0 12px;">Level-by-level progress</h3>
+      <h3 style="font-size:15px;margin:0 0 12px;">Level-by-level progress (Spoken English)</h3>
       ${breakdown.map(lv => `
         <div class="detail-level-row">
           <h4>Level ${lv.levelId}: ${lv.levelTitle} ${lv.unlocked ? '' : '🔒'}</h4>
@@ -839,6 +1024,16 @@ async function openStudentDetail(id){
           </div>
         </div>
       `).join('')}
+      <h3 style="font-size:15px;margin:22px 0 12px;">School subjects</h3>
+      ${Object.keys(s.progress.subjectStats).length ? Object.entries(s.progress.subjectStats).map(([key, stat]) => `
+        <div class="detail-level-row">
+          <h4>${stat.label || key}</h4>
+          <div class="detail-level-meta">
+            <span>Score: ${stat.scorePercent}% (${stat.correct} correct, ${stat.incorrect} incorrect, ${stat.skipped} skipped)</span>
+            <span>Last attempt: ${stat.lastAttempt ? new Date(stat.lastAttempt).toLocaleDateString() : '—'}</span>
+          </div>
+        </div>
+      `).join('') : `<p class="empty-state">No subject quizzes attempted yet.</p>`}
     `;
     document.getElementById('close-detail-btn').addEventListener('click', closeStudentDetail);
   }catch(err){

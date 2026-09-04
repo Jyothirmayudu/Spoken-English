@@ -153,3 +153,36 @@ level), the 96-question quiz with hints and skip, the read-aloud player with
 live word highlighting and drag-to-seek, and per-student JSON export — all
 unchanged, just now backed by real accounts instead of one browser's local
 storage.
+
+## 7. School Subjects (Classes 3–10)
+
+Alongside Spoken English, students now pick a class (3rd–10th) on first
+login and get a subject dashboard for that class:
+
+- **Live now, with real content:** Indian Mythology (choose Ramayana or
+  Mahabharata), Indian History & Culture, Sports & GK, and Social Studies —
+  which includes a State & Capital quiz that's freshly randomised from a
+  28-state list every time it's opened.
+- **Shown as "Coming soon":** Maths, English (grammar), Biology, Physical
+  Science, Hindi, Telugu, and Computer. These need real, grade-board-aligned
+  curriculum content, which is a substantial project of its own — the cards
+  are there and wired up, just without content yet.
+
+Admin can see each student's class, every subject quiz attempt (score,
+correct/incorrect/skipped, last attempt date), alongside their Spoken
+English progress, all in one detail view.
+
+A couple of things worth knowing:
+- **Question freshness:** the State & Capital quiz is genuinely regenerated
+  each time from the state list. The other new subjects (Mythology, History,
+  Sports & GK) use a fixed, well-checked question bank rather than pulling
+  live from the internet — there's no safe, reliable way for an app to turn
+  a random web page into a clean quiz question automatically. If you want
+  true ever-changing questions later, that needs a real question-generation
+  service (e.g. an LLM API) wired in deliberately, with its own API key and
+  cost.
+- **Search bar:** the dashboard search filters the signed-in student's own
+  subjects and levels only. Student-to-student profile search was
+  intentionally left out — since this now serves children (Class 3 and up),
+  letting students browse each other's profiles isn't something I built in.
+  Admin already has full search/visibility across all students.

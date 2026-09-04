@@ -10,16 +10,19 @@ function summarize(user, progress){
   const totalCompleted = progress.completed.length;
   const scores = Object.values(progress.levelScores);
   const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+  const subjectAttempts = Object.keys(progress.subjectStats || {}).length;
   return {
     id: user.id,
     name: user.name,
     email: user.email,
     status: user.status,
     profilePic: user.profile_pic,
+    classLevel: user.class_level,
     createdAt: user.created_at,
     conceptsCompleted: totalCompleted,
     levelsUnlocked: progress.unlocked.length,
     averageQuizScore: avgScore,
+    subjectQuizzesAttempted: subjectAttempts,
   };
 }
 
@@ -48,6 +51,7 @@ router.get('/students/:id', (req, res) => {
     status: user.status,
     profilePic: user.profile_pic,
     bio: user.bio,
+    classLevel: user.class_level,
     createdAt: user.created_at,
     progress: parseProgressRow(row),
   });

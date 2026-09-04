@@ -15,6 +15,7 @@ function publicUser(u){
     status: u.status,
     profilePic: u.profile_pic,
     bio: u.bio,
+    classLevel: u.class_level,
     createdAt: u.created_at,
   };
 }
@@ -100,6 +101,18 @@ router.put('/me/profile', requireAuth, (req, res) => {
   // Re-issue the token so the name shown in the UI updates immediately.
   const token = signToken(updated);
   setAuthCookie(res, token);
+  res.json({ user: publicUser(updated) });
+});
+
+// ---------- Set / change class level (3–10) ----------
+router.put('/me/class', requireAuth, (req, res) => {
+  const { classLevel } = req.body || {};
+  const n = Number(classLevel);
+  if(!Number.isInteger(n) || n < 3 || n > 10){
+    return res.status(400).json({ error: 'Please choose a class between 3 and 10.' });
+  }
+  db.prepare(`UPDATE users SET class_level = ? WHERE id = ?`).run(n, req.user.id);
+  const updated = db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.id);
   res.json({ user: publicUser(updated) });
 });
 
