@@ -1,7 +1,11 @@
-# SpeakPath — Spoken English Course (Full Application)
+# My School (formerly SpeakPath) — Full Learning Platform
 
-A day-by-day spoken English course with student accounts, progress tracking,
-and an admin dashboard — built as a small Node.js + Express + SQLite app.
+A day-by-day spoken English course, plus a class-based (3rd–10th) school
+subjects dashboard, student accounts, progress tracking, and an admin
+dashboard — built as a small Node.js + Express + SQLite app. The app's name,
+logo, and footer text are all editable by the admin — the default is now
+"My School," but you can rename it to your actual school/institute name from
+Admin → Site Settings & Data.
 
 ---
 
@@ -186,3 +190,93 @@ A couple of things worth knowing:
   intentionally left out — since this now serves children (Class 3 and up),
   letting students browse each other's profiles isn't something I built in.
   Admin already has full search/visibility across all students.
+
+## 8. All subjects now enabled, with difficulty levels
+
+Every subject card now works (no more "Coming soon"), and clicking "Take a
+Quiz" opens a picker for **Basic (Primary, Class 3–5)**, **Medium (Middle,
+Class 6–8)**, or **Hard (Secondary, Class 9–10)** — matching CBSE's real
+stage structure. What each tier actually contains, honestly:
+
+- **Maths** — a genuine random-number generator per difficulty, so it's a
+  different quiz every single time, at any level.
+- **State & Capital** — Basic draws from 10 well-known states, Medium from
+  all 28, Hard from the less commonly known ones.
+- **Mythology, History & Culture, Sports & GK** — a 20-question bank each,
+  split into three difficulty bands, with a random subset served per
+  attempt.
+- **English, Biology, Physical Science, Hindi, Telugu, Computer** — a
+  24-question bank each (8 per difficulty tier), newly written and checked.
+
+**Being straight about "CBSE curriculum":** the difficulty *labels* now
+genuinely match CBSE's Primary/Middle/Secondary stage structure, and the
+content is broadly accurate general knowledge for each subject. It is **not**
+mapped chapter-by-chapter to the actual CBSE textbooks for each class — doing
+that properly (verified against the real NCERT/CBSE syllabus per subject per
+class) is a substantial curriculum project on its own. Treat this as a solid,
+correct general-knowledge foundation to build on, not an exact replica of a
+CBSE class's textbook.
+
+## 9. Branding: title, logo, and footer (admin-editable)
+
+Log in as admin → **Site Settings & Data** tab → **Branding**. You can change:
+- The site title shown everywhere (login screen, top nav, browser tab)
+- The logo (upload any image, or reset to the default icon)
+- The footer text (shown on the login screen and every logged-in page)
+
+These are stored in the database and apply instantly for every user — no
+code changes needed to rename this for your own school.
+
+## 10. Where your data lives — database AND JSON, honestly explained
+
+**The database is the real, authoritative storage.** Every account and every
+bit of progress lives in `db/speakpath.db` — a single SQLite file. This is
+not something dressed up to look like a database; it's a genuine relational
+database, and it's what the app reads and writes on every request.
+
+**JSON is also available, in two ways:**
+1. Every student already has their own **"Export progress (JSON)"** button
+   on their dashboard — a personal, human-readable backup file.
+2. Admin now has **"Export full database (JSON)"** under Site Settings &
+   Data — this dumps *every* account and *all* progress into one JSON file,
+   downloads it to you, and also saves a copy to `db/backup.json` right next
+   to the database file. So at any time, you genuinely have both: the live
+   SQLite database, and a full JSON mirror of it on disk.
+
+**To browse the raw database directly** (not just via the app's UI), download
+the free, open-source **[DB Browser for SQLite](https://sqlitebrowser.org/)**
+and open `db/speakpath.db` from your project folder. You'll see every table
+(`users`, `progress`, `site_settings`) and every row, and can even edit data
+directly if you ever need to (e.g. manually fixing a record) — no coding
+required.
+
+## 11. Publishing to GitHub and hosting it somewhere public
+
+**Pushing to GitHub** (from inside your project folder, if you haven't already):
+```bash
+git init
+git add .
+git commit -m "My School app"
+git branch -M main
+git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPO-NAME.git
+git push -u origin main
+```
+(`.gitignore` already excludes `node_modules` and the database file, so your
+repo stays small and you never accidentally publish student data.)
+
+**Getting a public URL** — you have two honest options, covered in detail
+earlier in this README (see sections 2–3), summarised here:
+
+- **Simple, but data isn't guaranteed to persist long-term:** deploy to
+  [Render](https://render.com)'s free tier — connect your GitHub repo, it
+  auto-detects `npm start`, and you get a public URL in minutes. The
+  trade-off: Render's free tier doesn't support a persistent disk, so the
+  database can reset on redeploys. The JSON backup feature in section 10 is
+  a genuinely useful safety net here — export it regularly.
+- **More setup, but data is safe:** a real, free-forever VM (e.g. Oracle
+  Cloud's Always Free tier), where the disk is genuinely persistent. This
+  needs more one-time setup (SSH, installing Node, running the app with
+  `pm2`) but then nothing resets on its own.
+
+Given you asked to "make it simple" this time, Render is the quicker path —
+just remember to export your JSON backup periodically if you go that route.

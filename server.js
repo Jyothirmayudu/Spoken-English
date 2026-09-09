@@ -8,6 +8,8 @@ const cookieParser = require('cookie-parser');
 const authRoutes = require('./routes/auth');
 const progressRoutes = require('./routes/progress');
 const adminRoutes = require('./routes/admin');
+const settingsRoutes = require('./routes/settings');
+const dataRoutes = require('./routes/data');
 
 const app = express();
 
@@ -17,6 +19,8 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api', progressRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', settingsRoutes);
+app.use('/api', dataRoutes);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -27,5 +31,5 @@ app.get('*', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`SpeakPath is running — open http://localhost:${PORT} in your browser.`);
+  console.log(`My School is running — open http://localhost:${PORT} in your browser.`);
 });

@@ -662,3 +662,27 @@ a{ transition: opacity .12s ease; }
 .subject-status{font-size:12.5px;color:var(--ink-soft);margin:0 0 12px;}
 .subject-status.good{color:var(--primary-dark);font-weight:600;}
 .subject-status.coming-soon{color:var(--accent);font-weight:600;}
+
+/* ---------- Subject modal: variant/difficulty choice buttons ---------- */
+.variant-choice-btn.active, .difficulty-choice-btn.active{
+  background:var(--primary);color:#fff;border-color:var(--primary);
+}
+
+/* ---------- Full course accordion (all levels in one view) ---------- */
+.course-level-section{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:16px;overflow:hidden;
+}
+.course-level-header{
+  display:flex;align-items:center;gap:14px;padding:20px 22px;cursor:pointer;
+  transition:background-color .12s ease;
+}
+.course-level-header:hover{background:var(--bg-soft);}
+.course-level-icon{font-size:28px;flex-shrink:0;}
+.course-level-title-block{flex:1;min-width:0;}
+.course-level-title-block h3{margin:0 0 3px;font-size:16.5px;}
+.course-level-title-block p{margin:0;font-size:12.5px;color:var(--ink-soft);}
+.course-level-chevron{color:var(--ink-soft);font-size:14px;transition:transform .18s ease;flex-shrink:0;}
+.course-level-section.open .course-level-chevron{transform:rotate(180deg);}
+.course-level-body{display:none;padding:0 22px 22px;}
+.course-level-section.open .course-level-body{display:block;}

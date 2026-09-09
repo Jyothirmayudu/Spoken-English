@@ -38,7 +38,19 @@ db.exec(`
     unlocked_json       TEXT NOT NULL DEFAULT '[1]',
     updated_at          TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS site_settings (
+    id          INTEGER PRIMARY KEY CHECK (id = 1),
+    site_title  TEXT NOT NULL DEFAULT 'My School',
+    logo_image  TEXT,
+    footer_text TEXT NOT NULL DEFAULT '© 2026 My School — a day-by-day learning platform.'
+  );
 `);
+
+const settingsExist = db.prepare(`SELECT id FROM site_settings WHERE id = 1`).get();
+if(!settingsExist){
+  db.prepare(`INSERT INTO site_settings (id, site_title, logo_image, footer_text) VALUES (1, 'My School', NULL, '© 2026 My School — a day-by-day learning platform.')`).run();
+}
 
 // Migrations for databases created before class_level / subject_stats_json existed.
 const userColumnsNow = db.prepare(`PRAGMA table_info(users)`).all().map(c => c.name);

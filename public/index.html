@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SpeakPath — Learn Spoken English</title>
+<title>My School</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
 <!-- ===================== AUTH VIEW (login / sign up / admin) ===================== -->
 <div id="view-auth">
   <div class="login-card">
-    <div class="login-mark">
+    <div class="login-mark" id="login-logo-mark">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <rect x="2" y="8" width="3" height="8" rx="1.5" fill="white"/>
         <rect x="8" y="4" width="3" height="16" rx="1.5" fill="white"/>
@@ -22,7 +22,7 @@
         <rect x="20" y="9" width="3" height="6" rx="1.5" fill="white"/>
       </svg>
     </div>
-    <h1>Welcome to SpeakPath</h1>
+    <h1>Welcome to <span id="login-site-title">My School</span></h1>
     <p class="sub">A day-by-day spoken English course, built to build real confidence, one topic at a time.</p>
 
     <div class="auth-tabs">
@@ -71,8 +71,8 @@
 
     <p class="note-line">Your account and progress are stored on this app's server, so you can log in from any device.</p>
 
-    <footer class="app-footer" style="border-top:none;background:none;padding-top:18px;">
-      © 2026 SpeakPath — a day-by-day spoken English course. Built for practising real conversation.
+    <footer class="app-footer" style="border-top:none;background:none;padding-top:18px;" id="login-footer-text">
+      © 2026 My School — a day-by-day learning platform.
     </footer>
   </div>
 </div>
@@ -82,7 +82,7 @@
 <div id="app-shell" class="hidden">
   <div class="topbar">
     <div class="brand" id="brand-home-btn" role="button" tabindex="0" title="Go to dashboard">
-      <span class="brand-mark">
+      <span class="brand-mark" id="topbar-logo-mark">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect x="2" y="8" width="3" height="8" rx="1.5" fill="white"/>
           <rect x="8" y="4" width="3" height="16" rx="1.5" fill="white"/>
@@ -90,7 +90,7 @@
           <rect x="20" y="9" width="3" height="6" rx="1.5" fill="white"/>
         </svg>
       </span>
-      <span class="brand-name">SpeakPath</span>
+      <span class="brand-name" id="topbar-site-title">My School</span>
     </div>
     <div class="topbar-right">
       <div class="profile-menu">
@@ -138,7 +138,10 @@
         </div>
       </div>
 
-      <h2 class="section-title">Your levels</h2>
+      <h2 class="section-title">
+        Your levels
+        <button class="btn btn-ghost small-btn" id="view-full-course-btn" type="button">📖 View Full Course</button>
+      </h2>
       <div class="level-grid" id="level-grid"></div>
 
       <div class="divider-line"></div>
@@ -181,11 +184,23 @@
       </div>
     </div>
 
+    <!-- ---------- FULL COURSE ACCORDION (all levels in one view) ---------- -->
+    <div id="view-course" class="hidden">
+      <div class="back-row">
+        <button class="back-link" onclick="goDashboard()">← Back to dashboard</button>
+      </div>
+      <div class="level-header">
+        <h1>English Learning Course</h1>
+        <p>Every level, every day, every topic — all in one place. Click a level to expand it.</p>
+      </div>
+      <div id="course-accordion"></div>
+    </div>
+
     <!-- ---------- QUIZ ---------- -->
     <div id="view-quiz" class="hidden">
       <div class="quiz-wrap">
         <div class="back-row">
-          <button class="back-link" onclick="goLevel(currentLevel)">← Back to level</button>
+          <button class="back-link" id="quiz-back-btn" onclick="goLevel(currentLevel)">← Back to level</button>
         </div>
         <div class="quiz-progress">
           <span class="quiz-progress-label" id="quiz-progress-label">Question 1 of 7</span>
@@ -284,6 +299,13 @@
         </div>
         <button class="btn btn-ghost" id="change-password-btn" style="width:auto;padding-left:26px;padding-right:26px;">Update password</button>
       </div>
+
+      <div class="divider-line" style="max-width:900px;margin-left:auto;margin-right:auto;"></div>
+
+      <div id="profile-subjects-section" style="max-width:900px;margin:0 auto;">
+        <h2 class="section-title" id="profile-subjects-title">🏫 Your School Subjects</h2>
+        <div class="level-grid" id="profile-subject-grid"></div>
+      </div>
     </div>
 
     <!-- ---------- ADMIN DASHBOARD ---------- -->
@@ -294,33 +316,81 @@
           <p>Every student's account and progress, at a glance.</p>
         </div>
 
-        <div class="admin-stat-row">
-          <div class="stat-card">
-            <div class="stat-num" id="admin-stat-total">0</div>
-            <div class="stat-label">Total students</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-num" id="admin-stat-active">0</div>
-            <div class="stat-label">Active students</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-num" id="admin-stat-terminated">0</div>
-            <div class="stat-label">Terminated students</div>
-          </div>
+        <div class="auth-tabs" style="max-width:420px;">
+          <button class="auth-tab active" data-admin-tab="students" type="button">Students</button>
+          <button class="auth-tab" data-admin-tab="settings" type="button">Site Settings & Data</button>
         </div>
 
-        <h2 class="admin-section-title"><span class="status-dot active"></span> Active students</h2>
-        <div class="student-grid" id="active-student-grid"></div>
+        <div class="auth-form active" data-admin-panel="students">
+          <div class="admin-stat-row">
+            <div class="stat-card">
+              <div class="stat-num" id="admin-stat-total">0</div>
+              <div class="stat-label">Total students</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-num" id="admin-stat-active">0</div>
+              <div class="stat-label">Active students</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-num" id="admin-stat-terminated">0</div>
+              <div class="stat-label">Terminated students</div>
+            </div>
+          </div>
 
-        <h2 class="admin-section-title"><span class="status-dot terminated"></span> Terminated students</h2>
-        <div class="student-grid" id="terminated-student-grid"></div>
+          <h2 class="admin-section-title"><span class="status-dot active"></span> Active students</h2>
+          <div class="student-grid" id="active-student-grid"></div>
+
+          <h2 class="admin-section-title"><span class="status-dot terminated"></span> Terminated students</h2>
+          <div class="student-grid" id="terminated-student-grid"></div>
+        </div>
+
+        <div class="auth-form" data-admin-panel="settings" style="max-width:640px;">
+          <div id="settings-error" class="msg-box msg-error hidden"></div>
+          <div id="settings-success" class="msg-box msg-success hidden"></div>
+
+          <h2 style="font-size:17px;margin:0 0 16px;">Branding</h2>
+          <div class="profile-pic-row">
+            <div class="profile-pic-preview" id="settings-logo-preview" style="border-radius:14px;background:var(--primary);">🏫</div>
+            <div class="profile-pic-actions">
+              <label class="btn btn-ghost small-btn" for="settings-logo-input" style="cursor:pointer;">Upload logo image</label>
+              <input type="file" id="settings-logo-input" accept="image/*">
+              <button class="btn btn-ghost small-btn" id="settings-logo-reset-btn" type="button">Reset to default icon</button>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="settings-title-input">Site title</label>
+            <input class="text-input" id="settings-title-input" type="text" maxlength="60" placeholder="My School">
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="settings-footer-input">Footer text</label>
+            <input class="text-input" id="settings-footer-input" type="text" maxlength="300" placeholder="© 2026 My School — a day-by-day learning platform.">
+          </div>
+          <button class="btn btn-primary" id="save-settings-btn" style="width:auto;padding-left:26px;padding-right:26px;">Save branding</button>
+
+          <div class="divider-line"></div>
+
+          <h2 style="font-size:17px;margin:0 0 12px;">Data & backup</h2>
+          <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin:0 0 16px;">
+            All data lives in a real SQLite database file (<code>db/speakpath.db</code>) on the server —
+            that's the source of truth. The button below also saves a full, human-readable JSON copy of
+            everything (every account and every bit of progress, no passwords included) to
+            <code>db/backup.json</code> on disk, and downloads it to you as well — so you always have both
+            a database and a plain JSON backup.
+          </p>
+          <button class="btn btn-ghost small-btn" id="export-all-btn" type="button">⬇ Export full database (JSON)</button>
+          <p style="font-size:12px;color:var(--ink-soft);line-height:1.6;margin:14px 0 0;">
+            To browse the raw SQLite database directly (tables, rows, everything) with a visual tool,
+            download the free, open-source <strong>DB Browser for SQLite</strong> app and open the
+            <code>db/speakpath.db</code> file from your project folder.
+          </p>
+        </div>
       </div>
     </div>
 
   </div>
 
-  <footer class="app-footer">
-    © 2026 SpeakPath — a day-by-day spoken English course. Built for practising real conversation.
+  <footer class="app-footer" id="app-footer-text">
+    © 2026 My School — a day-by-day learning platform.
   </footer>
 </div>
 
@@ -331,14 +401,29 @@
 
 <!-- ---------- Mythology variant picker modal ---------- -->
 <div id="variant-picker-backdrop" class="student-detail-backdrop hidden">
-  <div class="student-detail-panel" style="max-width:420px;text-align:center;">
-    <h2 style="font-size:19px;margin:0 0 8px;">Choose your epic</h2>
-    <p style="color:var(--ink-soft);font-size:13.5px;margin:0 0 22px;">Pick which story you'd like to be quizzed on.</p>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
-      <button class="btn btn-primary variant-choice-btn" data-variant="ramayana" style="flex:1;min-width:140px;">📜 Ramayana</button>
-      <button class="btn btn-primary variant-choice-btn" data-variant="mahabharata" style="flex:1;min-width:140px;">📜 Mahabharata</button>
+  <div class="student-detail-panel" style="max-width:440px;text-align:center;">
+    <h2 style="font-size:19px;margin:0 0 4px;" id="subject-modal-title">Set up your quiz</h2>
+    <p style="color:var(--ink-soft);font-size:13.5px;margin:0 0 20px;" id="subject-modal-sub">Choose your options below.</p>
+
+    <div id="variant-step" class="hidden">
+      <p class="field-label" style="text-align:left;">Choose your epic</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:20px;">
+        <button class="btn btn-ghost variant-choice-btn" data-variant="ramayana" style="flex:1;min-width:130px;">📜 Ramayana</button>
+        <button class="btn btn-ghost variant-choice-btn" data-variant="mahabharata" style="flex:1;min-width:130px;">📜 Mahabharata</button>
+      </div>
     </div>
-    <button class="btn btn-ghost small-btn" id="variant-cancel-btn" style="margin-top:16px;">Cancel</button>
+
+    <div id="difficulty-step">
+      <p class="field-label" style="text-align:left;">Choose your level (CBSE stage)</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:22px;">
+        <button class="btn btn-ghost difficulty-choice-btn" data-difficulty="basic" style="flex:1;min-width:120px;">🟢 Primary<br><span style="font-size:11px;font-weight:400;">Class 3–5</span></button>
+        <button class="btn btn-ghost difficulty-choice-btn" data-difficulty="medium" style="flex:1;min-width:120px;">🟡 Middle<br><span style="font-size:11px;font-weight:400;">Class 6–8</span></button>
+        <button class="btn btn-ghost difficulty-choice-btn" data-difficulty="hard" style="flex:1;min-width:120px;">🔴 Secondary<br><span style="font-size:11px;font-weight:400;">Class 9–10</span></button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="subject-start-btn" style="width:100%;" disabled>Start Quiz</button>
+    <button class="btn btn-ghost small-btn" id="variant-cancel-btn" style="margin-top:12px;">Cancel</button>
   </div>
 </div>
 

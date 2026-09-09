@@ -124,8 +124,42 @@ function updateTopbarForUser(){
   document.getElementById('menu-admin-btn').classList.toggle('hidden', currentUser.role !== 'admin');
 }
 
+// ---------- Site branding (title, logo, footer) ----------
+let currentSettings = null;
+
+function applySettings(settings){
+  currentSettings = settings;
+  document.title = settings.siteTitle;
+  document.getElementById('login-site-title').textContent = settings.siteTitle;
+  document.getElementById('topbar-site-title').textContent = settings.siteTitle;
+  document.getElementById('login-footer-text').textContent = settings.footerText;
+  document.getElementById('app-footer-text').textContent = settings.footerText;
+
+  const defaultLogoSVG = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect x="2" y="8" width="3" height="8" rx="1.5" fill="white"/>
+    <rect x="8" y="4" width="3" height="16" rx="1.5" fill="white"/>
+    <rect x="14" y="6" width="3" height="12" rx="1.5" fill="white"/>
+    <rect x="20" y="9" width="3" height="6" rx="1.5" fill="white"/>
+  </svg>`;
+  const logoHTML = settings.logoImage
+    ? `<img src="${settings.logoImage}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
+    : defaultLogoSVG;
+  document.getElementById('login-logo-mark').innerHTML = logoHTML;
+  document.getElementById('topbar-logo-mark').innerHTML = logoHTML;
+}
+
+async function loadSettings(){
+  try{
+    const settings = await apiFetch('/api/settings');
+    applySettings(settings);
+  }catch(err){
+    console.error('Could not load site settings:', err.message);
+  }
+}
+
 // Try to resume a session on page load.
 window.addEventListener('load', async () => {
+  await loadSettings();
   try{
     const data = await apiFetch('/api/auth/me');
     await handleAuthSuccess(data.user);
@@ -183,6 +217,7 @@ async function loadProgressFromServer(){
     completed: data.completed,
     levelScores: data.levelScores,
     quizStats: data.quizStats,
+    subjectStats: data.subjectStats || {},
     unlocked: data.unlocked,
   };
 }
@@ -272,7 +307,7 @@ function showView(id){
   window.speechSynthesis.cancel();
   resetAllListenGroups();
   window.scrollTo(0, 0);
-  ['view-dashboard', 'view-level', 'view-quiz', 'view-results', 'view-profile', 'view-admin'].forEach(v => {
+  ['view-dashboard', 'view-level', 'view-course', 'view-quiz', 'view-results', 'view-profile', 'view-admin'].forEach(v => {
     document.getElementById(v).classList.toggle('hidden', v !== id);
   });
 }
@@ -371,28 +406,25 @@ document.getElementById('change-class-btn').addEventListener('click', () => {
   renderClassButtons();
 });
 
-function renderSubjectGrid(classLevel){
-  const grid = document.getElementById('subject-grid');
+function renderSubjectGrid(classLevel, containerId){
+  containerId = containerId || 'subject-grid';
+  const grid = document.getElementById(containerId);
   grid.innerHTML = '';
   const subjects = SUBJECTS.filter(s => classLevel >= s.minClass && classLevel <= s.maxClass);
 
   subjects.forEach(subject => {
     let statusLine = 'Not tried yet';
     let pct = 0;
-    if(subject.available){
-      if(subject.hasVariants){
-        const attempts = ['ramayana', 'mahabharata']
-          .map(v => progress.subjectStats[subject.id + '_' + v])
-          .filter(Boolean);
-        if(attempts.length){
-          const best = attempts.sort((a, b) => b.scorePercent - a.scorePercent)[0];
-          statusLine = `Best: ${best.scorePercent}%`;
-          pct = best.scorePercent;
-        }
-      }else{
-        const stat = progress.subjectStats[subject.id];
-        if(stat){ statusLine = `Score: ${stat.scorePercent}%`; pct = stat.scorePercent; }
-      }
+    // Stats are keyed as "subjectId[_variant]_difficulty" — find every
+    // attempt recorded for this subject, across all variants/difficulties,
+    // and show the best score.
+    const attempts = Object.keys(progress.subjectStats)
+      .filter(key => key === subject.id || key.startsWith(subject.id + '_'))
+      .map(key => progress.subjectStats[key]);
+    if(attempts.length){
+      const best = attempts.sort((a, b) => b.scorePercent - a.scorePercent)[0];
+      statusLine = `Best: ${best.scorePercent}%`;
+      pct = best.scorePercent;
     }
 
     const card = document.createElement('div');
@@ -405,10 +437,10 @@ function renderSubjectGrid(classLevel){
       ${subject.available ? `
         <div class="progress-track"><div class="progress-fill quiz-fill" style="width:${pct}%"></div></div>
         <p class="subject-status ${pct >= 70 ? 'good' : ''}">${statusLine}</p>
-        <button class="btn btn-primary lv-cta subject-open-btn" type="button">Open quiz →</button>
+        <button class="btn btn-primary lv-cta subject-open-btn" type="button">📝 Take a Quiz</button>
       ` : `
         <p class="subject-status coming-soon">Coming soon</p>
-        <button class="btn btn-ghost lv-cta" disabled>Open quiz →</button>
+        <button class="btn btn-ghost lv-cta" disabled>📝 Take a Quiz</button>
       `}
     `;
     if(subject.available){
@@ -418,32 +450,86 @@ function renderSubjectGrid(classLevel){
   });
 }
 
+let subjectModalState = { subject: null, variant: null, difficulty: null };
+
 function openSubject(subject){
-  if(subject.hasVariants){
-    document.getElementById('variant-picker-backdrop').classList.remove('hidden');
-    document.getElementById('variant-picker-backdrop').dataset.subjectId = subject.id;
-    return;
-  }
-  if(subject.id === 'history'){
-    startSubjectQuiz('history', HISTORY_CULTURE_QUIZ.questions, { label: HISTORY_CULTURE_QUIZ.title });
-  }else if(subject.id === 'sportsgk'){
-    startSubjectQuiz('sportsgk', SPORTS_GK_QUIZ.questions, { label: SPORTS_GK_QUIZ.title });
-  }else if(subject.id === 'social'){
-    startSubjectQuiz('social', buildStateCapitalQuiz(10), { label: 'Social Studies: State & Capital' });
-  }
+  subjectModalState = { subject, variant: null, difficulty: null };
+
+  document.getElementById('subject-modal-title').textContent = subject.title;
+  document.getElementById('subject-modal-sub').textContent = subject.hasVariants
+    ? "Pick your story, then your level."
+    : "Pick your level to start.";
+
+  const variantStep = document.getElementById('variant-step');
+  variantStep.classList.toggle('hidden', !subject.hasVariants);
+
+  document.querySelectorAll('.variant-choice-btn, .difficulty-choice-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('subject-start-btn').disabled = true;
+
+  document.getElementById('variant-picker-backdrop').classList.remove('hidden');
 }
 
 document.querySelectorAll('.variant-choice-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    const variant = btn.dataset.variant;
-    document.getElementById('variant-picker-backdrop').classList.add('hidden');
-    const data = MYTHOLOGY_QUIZZES[variant];
-    startSubjectQuiz('mythology', data.questions, { variant, label: `Indian Mythology: ${data.label}` });
+    subjectModalState.variant = btn.dataset.variant;
+    document.querySelectorAll('.variant-choice-btn').forEach(b => b.classList.toggle('active', b === btn));
+    updateSubjectStartButton();
   });
 });
+
+document.querySelectorAll('.difficulty-choice-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    subjectModalState.difficulty = btn.dataset.difficulty;
+    document.querySelectorAll('.difficulty-choice-btn').forEach(b => b.classList.toggle('active', b === btn));
+    updateSubjectStartButton();
+  });
+});
+
+function updateSubjectStartButton(){
+  const { subject, variant, difficulty } = subjectModalState;
+  const ready = difficulty && (!subject.hasVariants || variant);
+  document.getElementById('subject-start-btn').disabled = !ready;
+}
+
+document.getElementById('subject-start-btn').addEventListener('click', () => {
+  const { subject, variant, difficulty } = subjectModalState;
+  document.getElementById('variant-picker-backdrop').classList.add('hidden');
+  launchSubjectQuiz(subject, difficulty, variant);
+});
+
 document.getElementById('variant-cancel-btn').addEventListener('click', () => {
   document.getElementById('variant-picker-backdrop').classList.add('hidden');
 });
+
+const DIFFICULTY_LABELS = { basic: 'Primary, Class 3-5', medium: 'Middle, Class 6-8', hard: 'Secondary, Class 9-10' };
+
+function launchSubjectQuiz(subject, difficulty, variant){
+  const diffLabel = DIFFICULTY_LABELS[difficulty];
+  const key = subject.id + (variant ? '_' + variant : '') + '_' + difficulty;
+
+  if(subject.id === 'mythology'){
+    const data = MYTHOLOGY_QUIZZES[variant];
+    const pool = splitByDifficulty(data.questions)[difficulty];
+    startSubjectQuiz(key, sampleQuestions(pool, 10), { label: `Indian Mythology: ${data.label} (${diffLabel})` });
+  }else if(subject.id === 'history'){
+    const pool = splitByDifficulty(HISTORY_CULTURE_QUIZ.questions)[difficulty];
+    startSubjectQuiz(key, sampleQuestions(pool, 10), { label: `${HISTORY_CULTURE_QUIZ.title} (${diffLabel})` });
+  }else if(subject.id === 'sportsgk'){
+    const pool = splitByDifficulty(SPORTS_GK_QUIZ.questions)[difficulty];
+    startSubjectQuiz(key, sampleQuestions(pool, 10), { label: `${SPORTS_GK_QUIZ.title} (${diffLabel})` });
+  }else if(subject.id === 'social'){
+    startSubjectQuiz(key, buildStateCapitalQuiz(15, difficulty), { label: `Social Studies: State & Capital (${diffLabel})` });
+  }else if(subject.id === 'maths'){
+    startSubjectQuiz(key, buildMathsQuiz(20, difficulty), { label: `Maths (${diffLabel})` });
+  }else{
+    const poolMap = {
+      english: ENGLISH_POOL, biology: BIOLOGY_POOL, physicalscience: PHYSICAL_SCIENCE_POOL,
+      computer: COMPUTER_POOL, hindi: HINDI_POOL, telugu: TELUGU_POOL,
+    };
+    const pool = poolMap[subject.id][difficulty];
+    startSubjectQuiz(key, sampleQuestions(pool, pool.length), { label: `${subject.title} (${diffLabel})` });
+  }
+}
 
 // Search bar: filters the student's own subject cards (and Spoken English
 // level cards) by title/description text. This searches the signed-in
@@ -456,6 +542,62 @@ document.getElementById('subject-search-input').addEventListener('input', (e) =>
     card.style.display = match ? '' : 'none';
   });
 });
+
+document.getElementById('view-full-course-btn').addEventListener('click', goFullCourse);
+
+function goFullCourse(){
+  const container = document.getElementById('course-accordion');
+  container.innerHTML = '';
+
+  LEVELS.forEach(level => {
+    const doneCount = level.concepts.filter(c => progress.completed.includes(c.id)).length;
+    const score = progress.levelScores[level.id];
+
+    const section = document.createElement('div');
+    section.className = 'course-level-section';
+    section.innerHTML = `
+      <div class="course-level-header">
+        <span class="course-level-icon">${LEVEL_ICONS[level.id] || '📘'}</span>
+        <div class="course-level-title-block">
+          <h3>Level ${level.id}: ${level.title}</h3>
+          <p>${doneCount}/${level.concepts.length} concepts done ${score !== undefined ? '· Quiz: ' + score + '%' : '· Quiz not taken'}</p>
+        </div>
+        <span class="course-level-chevron">▾</span>
+      </div>
+      <div class="course-level-body"></div>
+    `;
+    const body = section.querySelector('.course-level-body');
+    const conceptsById = {};
+    level.concepts.forEach(c => { conceptsById[c.id] = c; });
+
+    (level.days || []).forEach(day => {
+      const dayConcepts = day.conceptIds.map(id => conceptsById[id]).filter(Boolean);
+      const daySection = document.createElement('div');
+      daySection.className = 'day-section';
+      daySection.innerHTML = `
+        <div class="day-header">
+          <span class="day-badge">Day ${day.day}</span>
+          <h3 class="day-title">${day.title}</h3>
+        </div>
+        <div class="concept-list"></div>
+      `;
+      const list = daySection.querySelector('.concept-list');
+      dayConcepts.forEach(c => list.appendChild(buildConceptCard(c, level, level.id)));
+      body.appendChild(daySection);
+    });
+
+    section.querySelector('.course-level-header').addEventListener('click', () => {
+      section.classList.toggle('open');
+    });
+    container.appendChild(section);
+  });
+
+  // Open the first level by default so there's something to see immediately.
+  const first = container.querySelector('.course-level-section');
+  if(first) first.classList.add('open');
+
+  showView('view-course');
+}
 
 function renderLevel(levelId){
   const level = LEVELS.find(l => l.id === levelId);
@@ -629,6 +771,15 @@ function renderQuestion(){
   quizState.answered = false;
   quizState.selected = null;
 
+  const backBtn = document.getElementById('quiz-back-btn');
+  if(quizState.mode === 'level'){
+    backBtn.textContent = '← Back to level';
+    backBtn.onclick = () => goLevel(currentLevel);
+  }else{
+    backBtn.textContent = '← Back to dashboard';
+    backBtn.onclick = () => goDashboard();
+  }
+
   document.getElementById('quiz-progress-label').textContent = `Question ${quizState.qIndex + 1} of ${quizState.questions.length}`;
   document.getElementById('quiz-progress-fill').style.width = `${(quizState.qIndex / quizState.questions.length) * 100}%`;
   document.getElementById('q-number-badge').textContent = `Q${quizState.qIndex + 1}`;
@@ -735,6 +886,7 @@ function checkAnswer(){
 }
 
 function advanceQuiz(){
+  window.scrollTo(0, 0);
   if(quizState.qIndex < quizState.questions.length - 1){
     quizState.qIndex++;
     renderQuestion();
@@ -851,6 +1003,16 @@ function goProfile(){
   renderProfilePicPreview(currentUser.profilePic);
   document.getElementById('current-password-input').value = '';
   document.getElementById('new-password-input').value = '';
+
+  const subjectsSection = document.getElementById('profile-subjects-section');
+  if(currentUser.role === 'student' && currentUser.classLevel){
+    subjectsSection.classList.remove('hidden');
+    document.getElementById('profile-subjects-title').innerHTML = `🏫 Your School Subjects — Class ${currentUser.classLevel}`;
+    renderSubjectGrid(currentUser.classLevel, 'profile-subject-grid');
+  }else{
+    subjectsSection.classList.add('hidden');
+  }
+
   showView('view-profile');
 }
 
@@ -938,6 +1100,90 @@ async function goAdmin(){
     document.getElementById('active-student-grid').innerHTML = `<p class="empty-state">Couldn't load students: ${err.message}</p>`;
   }
 }
+
+document.querySelectorAll('[data-admin-tab]').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('[data-admin-tab]').forEach(t => t.classList.toggle('active', t === tab));
+    document.querySelectorAll('[data-admin-panel]').forEach(p => p.classList.toggle('active', p.dataset.adminPanel === tab.dataset.adminTab));
+    if(tab.dataset.adminTab === 'settings') loadSettingsIntoForm();
+  });
+});
+
+function hideSettingsMessages(){
+  document.getElementById('settings-error').classList.add('hidden');
+  document.getElementById('settings-success').classList.add('hidden');
+}
+
+let pendingLogoImage = null;
+
+function loadSettingsIntoForm(){
+  hideSettingsMessages();
+  pendingLogoImage = null;
+  document.getElementById('settings-title-input').value = currentSettings.siteTitle;
+  document.getElementById('settings-footer-input').value = currentSettings.footerText;
+  const preview = document.getElementById('settings-logo-preview');
+  preview.innerHTML = currentSettings.logoImage
+    ? `<img src="${currentSettings.logoImage}" alt="" style="width:100%;height:100%;object-fit:cover;">`
+    : '🏫';
+}
+
+document.getElementById('settings-logo-input').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 2 * 1024 * 1024){
+    document.getElementById('settings-error').textContent = 'Please choose an image under 2MB.';
+    document.getElementById('settings-error').classList.remove('hidden');
+    e.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    pendingLogoImage = reader.result;
+    document.getElementById('settings-logo-preview').innerHTML = `<img src="${pendingLogoImage}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('settings-logo-reset-btn').addEventListener('click', () => {
+  pendingLogoImage = '';
+  document.getElementById('settings-logo-preview').innerHTML = '🏫';
+});
+
+document.getElementById('save-settings-btn').addEventListener('click', async () => {
+  hideSettingsMessages();
+  const siteTitle = document.getElementById('settings-title-input').value.trim();
+  const footerText = document.getElementById('settings-footer-input').value.trim();
+  try{
+    const body = { siteTitle, footerText };
+    if(pendingLogoImage !== null) body.logoImage = pendingLogoImage;
+    const updated = await apiFetch('/api/admin/settings', { method: 'PUT', body: JSON.stringify(body) });
+    applySettings(updated);
+    pendingLogoImage = null;
+    document.getElementById('settings-success').textContent = 'Branding updated.';
+    document.getElementById('settings-success').classList.remove('hidden');
+  }catch(err){
+    document.getElementById('settings-error').textContent = err.message;
+    document.getElementById('settings-error').classList.remove('hidden');
+  }
+});
+
+document.getElementById('export-all-btn').addEventListener('click', async () => {
+  try{
+    const res = await fetch('/api/admin/export-all', { credentials: 'same-origin' });
+    if(!res.ok) throw new Error('Export failed.');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'my-school-full-backup.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }catch(err){
+    alert(err.message);
+  }
+});
 
 function renderAdminDashboard(data){
   const { active, terminated } = data;
