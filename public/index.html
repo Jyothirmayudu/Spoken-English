@@ -1,435 +1,919 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>My School</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
-
-<!-- ===================== AUTH VIEW (login / sign up / admin) ===================== -->
-<div id="view-auth">
-  <div class="login-card">
-    <div class="login-mark" id="login-logo-mark">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect x="2" y="8" width="3" height="8" rx="1.5" fill="white"/>
-        <rect x="8" y="4" width="3" height="16" rx="1.5" fill="white"/>
-        <rect x="14" y="6" width="3" height="12" rx="1.5" fill="white"/>
-        <rect x="20" y="9" width="3" height="6" rx="1.5" fill="white"/>
-      </svg>
-    </div>
-    <h1>Welcome to <span id="login-site-title">My School</span></h1>
-    <p class="sub">A day-by-day spoken English course, built to build real confidence, one topic at a time.</p>
-
-    <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="login" type="button">Log in</button>
-      <button class="auth-tab" data-tab="signup" type="button">Sign up</button>
-      <button class="auth-tab admin-tab" data-tab="admin" type="button">Admin</button>
-    </div>
-
-    <div id="auth-error" class="auth-error hidden"></div>
-
-    <!-- Log in -->
-    <form class="auth-form active" id="login-form" data-form="login">
-      <label class="field-label" for="login-identifier">Email or Username</label>
-      <input class="text-input" id="login-identifier" type="text" placeholder="you@example.com or your_username" required />
-      <label class="field-label" for="login-password">Password</label>
-      <input class="text-input" id="login-password" type="password" placeholder="••••••••" required />
-      <button class="btn btn-primary" type="submit">Log in</button>
-      <p class="auth-switch">New here? <button type="button" class="link-inline" data-switch-to="signup">Create an account</button></p>
-    </form>
-
-    <!-- Sign up -->
-    <form class="auth-form" id="signup-form" data-form="signup">
-      <label class="field-label" for="signup-name">Your name</label>
-      <input class="text-input" id="signup-name" type="text" placeholder="e.g. Jyo" required />
-      <label class="field-label" for="signup-username">Username</label>
-      <input class="text-input" id="signup-username" type="text" placeholder="e.g. jyo_speaks" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+" title="Letters, numbers, and underscores only" />
-      <label class="field-label" for="signup-email">Email</label>
-      <input class="text-input" id="signup-email" type="email" placeholder="you@example.com" required />
-      <label class="field-label" for="signup-password">Password</label>
-      <input class="text-input" id="signup-password" type="password" placeholder="At least 6 characters" required minlength="6" />
-      <label class="field-label" for="signup-confirm-password">Confirm password</label>
-      <input class="text-input" id="signup-confirm-password" type="password" placeholder="Re-enter your password" required minlength="6" />
-      <button class="btn btn-primary" type="submit">Create account</button>
-      <p class="auth-switch">Already have an account? <button type="button" class="link-inline" data-switch-to="login">Log in</button></p>
-    </form>
-
-    <!-- Admin -->
-    <form class="auth-form" id="admin-form" data-form="admin">
-      <p class="admin-hint">⚠ Admin access uses the same login as your account — you'll only land in the admin dashboard if this account has admin rights.</p>
-      <label class="field-label" for="admin-identifier">Admin email or username</label>
-      <input class="text-input" id="admin-identifier" type="text" placeholder="admin@example.com or admin_username" required />
-      <label class="field-label" for="admin-password">Password</label>
-      <input class="text-input" id="admin-password" type="password" placeholder="••••••••" required />
-      <button class="btn btn-primary" type="submit">Admin log in</button>
-    </form>
-
-    <p class="note-line">Your account and progress are stored on this app's server, so you can log in from any device.</p>
-
-    <footer class="app-footer" style="border-top:none;background:none;padding-top:18px;" id="login-footer-text">
-      © 2026 My School — a day-by-day learning platform.
-    </footer>
-  </div>
-</div>
-
-
-<!-- ===================== APP SHELL (everything after login) ===================== -->
-<div id="app-shell" class="hidden">
-  <div class="topbar">
-    <div class="brand" id="brand-home-btn" role="button" tabindex="0" title="Go to dashboard">
-      <span class="brand-mark" id="topbar-logo-mark">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect x="2" y="8" width="3" height="8" rx="1.5" fill="white"/>
-          <rect x="8" y="4" width="3" height="16" rx="1.5" fill="white"/>
-          <rect x="14" y="6" width="3" height="12" rx="1.5" fill="white"/>
-          <rect x="20" y="9" width="3" height="6" rx="1.5" fill="white"/>
-        </svg>
-      </span>
-      <span class="brand-name" id="topbar-site-title">My School</span>
-    </div>
-    <div class="topbar-right">
-      <div class="profile-menu">
-        <button class="profile-trigger" id="profile-trigger" type="button">
-          <span class="avatar" id="topbar-avatar">J</span>
-          <span class="profile-trigger-name" id="topbar-name">Jyo</span>
-          <span class="profile-trigger-caret">▾</span>
-        </button>
-        <div class="profile-dropdown" id="profile-dropdown">
-          <button class="profile-dropdown-item" id="menu-profile-btn" type="button">👤 Profile</button>
-          <button class="profile-dropdown-item hidden" id="menu-admin-btn" type="button">🛠 Admin dashboard</button>
-          <div class="profile-dropdown-divider"></div>
-          <button class="profile-dropdown-item danger" id="menu-logout-btn" type="button">↪ Logout</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My School</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <!-- ===================== AUTH VIEW (login / sign up / admin) ===================== -->
+    <div id="view-auth">
+      <div class="login-card">
+        <div class="login-mark" id="login-logo-mark">
+          <svg
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <rect x="2" y="8" width="3" height="8" rx="1.5" fill="white" />
+            <rect x="8" y="4" width="3" height="16" rx="1.5" fill="white" />
+            <rect x="14" y="6" width="3" height="12" rx="1.5" fill="white" />
+            <rect x="20" y="9" width="3" height="6" rx="1.5" fill="white" />
+          </svg>
         </div>
-      </div>
-    </div>
-  </div>
+        <h1>Welcome to <span id="login-site-title">My School</span></h1>
+        <p class="sub">
+          A day-by-day spoken English course, built to build real confidence,
+          one topic at a time.
+        </p>
 
-  <div class="shell">
-
-    <!-- ---------- DASHBOARD ---------- -->
-    <div id="view-dashboard">
-      <div class="dash-head">
-        <h1>Welcome back, <span id="dash-name">there</span></h1>
-        <p>Here's where your spoken English practice stands today.</p>
-        <div class="progress-file-row">
-          <button class="btn btn-ghost small-btn" id="export-progress-btn" type="button">⬇ Export progress (JSON)</button>
-          <button class="btn btn-ghost small-btn" id="print-dashboard-btn" type="button">🖨 Print dashboard</button>
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login" type="button">
+            Log in
+          </button>
+          <button class="auth-tab" data-tab="signup" type="button">
+            Sign up
+          </button>
+          <button class="auth-tab admin-tab" data-tab="admin" type="button">
+            Admin
+          </button>
         </div>
-        <p class="progress-file-note">Your progress is saved on the server against your account. Export any time for a personal backup file.</p>
-      </div>
 
-      <div class="stat-row">
-        <div class="stat-card">
-          <div class="stat-num" id="stat-concepts">0/96</div>
-          <div class="stat-label">Concepts covered so far</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="stat-levels">0/4</div>
-          <div class="stat-label">Levels completed</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="stat-next">Level 1</div>
-          <div class="stat-label">Recommended next step</div>
-        </div>
-      </div>
+        <div id="auth-error" class="auth-error hidden"></div>
 
-      <h2 class="section-title">
-        Your levels
-        <button class="btn btn-ghost small-btn" id="view-full-course-btn" type="button">📖 View Full Course</button>
-      </h2>
-      <div class="level-grid" id="level-grid"></div>
+        <!-- Log in -->
+        <form class="auth-form active" id="login-form" data-form="login">
+          <label class="field-label" for="login-identifier"
+            >Email or Username</label
+          >
+          <input
+            class="text-input"
+            id="login-identifier"
+            type="text"
+            placeholder="you@example.com or your_username"
+            required
+          />
+          <label class="field-label" for="login-password">Password</label>
+          <input
+            class="text-input"
+            id="login-password"
+            type="password"
+            placeholder="••••••••"
+            required
+          />
+          <button class="btn btn-primary" type="submit">Log in</button>
+          <p class="auth-switch">
+            New here?
+            <button type="button" class="link-inline" data-switch-to="signup">
+              Create an account
+            </button>
+          </p>
+        </form>
 
-      <div class="divider-line"></div>
+        <!-- Sign up -->
+        <form class="auth-form" id="signup-form" data-form="signup">
+          <label class="field-label" for="signup-name">Your name</label>
+          <input
+            class="text-input"
+            id="signup-name"
+            type="text"
+            placeholder="e.g. Jyo"
+            required
+          />
+          <label class="field-label" for="signup-username">Username</label>
+          <input
+            class="text-input"
+            id="signup-username"
+            type="text"
+            placeholder="e.g. jyo_speaks"
+            required
+            minlength="3"
+            maxlength="20"
+            pattern="[A-Za-z0-9_]+"
+            title="Letters, numbers, and underscores only"
+          />
+          <label class="field-label" for="signup-email">Email</label>
+          <input
+            class="text-input"
+            id="signup-email"
+            type="email"
+            placeholder="you@example.com"
+            required
+          />
+          <label class="field-label" for="signup-password">Password</label>
+          <input
+            class="text-input"
+            id="signup-password"
+            type="password"
+            placeholder="At least 6 characters"
+            required
+            minlength="6"
+          />
+          <label class="field-label" for="signup-confirm-password"
+            >Confirm password</label
+          >
+          <input
+            class="text-input"
+            id="signup-confirm-password"
+            type="password"
+            placeholder="Re-enter your password"
+            required
+            minlength="6"
+          />
+          <button class="btn btn-primary" type="submit">Create account</button>
+          <p class="auth-switch">
+            Already have an account?
+            <button type="button" class="link-inline" data-switch-to="login">
+              Log in
+            </button>
+          </p>
+        </form>
 
-      <div id="class-picker-card" class="class-picker-card hidden">
-        <h2 class="section-title" style="margin-bottom:8px;">🏫 Choose your class</h2>
-        <p style="color:var(--ink-soft);font-size:14px;margin:0 0 16px;">Pick your class to see subjects and quizzes for your level.</p>
-        <div class="class-btn-row" id="class-btn-row"></div>
-      </div>
+        <!-- Admin -->
+        <form class="auth-form" id="admin-form" data-form="admin">
+          <p class="admin-hint">
+            ⚠ Admin access uses the same login as your account — you'll only
+            land in the admin dashboard if this account has admin rights.
+          </p>
+          <label class="field-label" for="admin-identifier"
+            >Admin email or username</label
+          >
+          <input
+            class="text-input"
+            id="admin-identifier"
+            type="text"
+            placeholder="admin@example.com or admin_username"
+            required
+          />
+          <label class="field-label" for="admin-password">Password</label>
+          <input
+            class="text-input"
+            id="admin-password"
+            type="password"
+            placeholder="••••••••"
+            required
+          />
+          <button class="btn btn-primary" type="submit">Admin log in</button>
+        </form>
 
-      <div id="subjects-section" class="hidden">
-        <div class="subjects-header-row">
-          <h2 class="section-title" style="margin-bottom:4px;">🏫 Class <span id="subjects-class-label">3</span> — School Subjects</h2>
-          <button class="btn btn-ghost small-btn" id="change-class-btn" type="button">Change class</button>
-        </div>
-        <div class="search-bar-row">
-          <input class="text-input search-input" id="subject-search-input" type="text" placeholder="🔍 Search your subjects, topics, or progress...">
-        </div>
-        <div class="level-grid" id="subject-grid"></div>
-      </div>
-    </div>
+        <p class="note-line">
+          Your account and progress are stored on this app's server, so you can
+          log in from any device.
+        </p>
 
-    <!-- ---------- LEVEL DETAIL ---------- -->
-    <div id="view-level" class="hidden">
-      <div class="back-row">
-        <button class="back-link" onclick="goDashboard()">← Back to dashboard</button>
-      </div>
-      <div class="level-header">
-        <div class="lv-tag" id="lv-tag">LEVEL 1</div>
-        <h1 id="lv-title">Foundations for Speaking</h1>
-        <p id="lv-desc"></p>
-      </div>
-      <div class="day-sections" id="day-sections"></div>
-      <div class="quiz-cta-card">
-        <div>
-          <h3>Ready to test yourself?</h3>
-          <p id="quiz-cta-desc">A short quiz on everything in this level. Score 70% or higher to unlock the next level.</p>
-        </div>
-        <button class="btn btn-accent" id="start-quiz-btn">Take the quiz</button>
+        <footer
+          class="app-footer"
+          style="border-top: none; background: none; padding-top: 18px"
+          id="login-footer-text"
+        >
+          © 2026 My School — a day-by-day learning platform.
+        </footer>
       </div>
     </div>
 
-    <!-- ---------- FULL COURSE ACCORDION (all levels in one view) ---------- -->
-    <div id="view-course" class="hidden">
-      <div class="back-row">
-        <button class="back-link" onclick="goDashboard()">← Back to dashboard</button>
-      </div>
-      <div class="level-header">
-        <h1>English Learning Course</h1>
-        <p>Every level, every day, every topic — all in one place. Click a level to expand it.</p>
-      </div>
-      <div id="course-accordion"></div>
-    </div>
-
-    <!-- ---------- QUIZ ---------- -->
-    <div id="view-quiz" class="hidden">
-      <div class="quiz-wrap">
-        <div class="back-row">
-          <button class="back-link" id="quiz-back-btn" onclick="goLevel(currentLevel)">← Back to level</button>
+    <!-- ===================== APP SHELL (everything after login) ===================== -->
+    <div id="app-shell" class="hidden">
+      <div class="topbar">
+        <div
+          class="brand"
+          id="brand-home-btn"
+          role="button"
+          tabindex="0"
+          title="Go to dashboard"
+        >
+          <span class="brand-mark" id="topbar-logo-mark">
+            <svg
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <rect x="2" y="8" width="3" height="8" rx="1.5" fill="white" />
+              <rect x="8" y="4" width="3" height="16" rx="1.5" fill="white" />
+              <rect x="14" y="6" width="3" height="12" rx="1.5" fill="white" />
+              <rect x="20" y="9" width="3" height="6" rx="1.5" fill="white" />
+            </svg>
+          </span>
+          <span class="brand-name" id="topbar-site-title">My School</span>
         </div>
-        <div class="quiz-progress">
-          <span class="quiz-progress-label" id="quiz-progress-label">Question 1 of 7</span>
-          <div class="quiz-progress-track"><div class="quiz-progress-fill" id="quiz-progress-fill" style="width:14%"></div></div>
-        </div>
-        <div class="q-card">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:22px;flex-wrap:wrap;">
-            <div style="display:flex;align-items:flex-start;gap:12px;min-width:0;">
-              <span class="q-number-badge" id="q-number-badge">Q1</span>
-              <p class="q-text" id="q-text"></p>
+        <div class="topbar-right">
+          <div class="profile-menu">
+            <button class="profile-trigger" id="profile-trigger" type="button">
+              <span class="avatar" id="topbar-avatar">J</span>
+              <span class="profile-trigger-name" id="topbar-name">Jyo</span>
+              <span class="profile-trigger-caret">▾</span>
+            </button>
+            <div class="profile-dropdown" id="profile-dropdown">
+              <button
+                class="profile-dropdown-item"
+                id="menu-profile-btn"
+                type="button"
+              >
+                👤 Profile
+              </button>
+              <button
+                class="profile-dropdown-item hidden"
+                id="menu-admin-btn"
+                type="button"
+              >
+                🛠 Admin dashboard
+              </button>
+              <div class="profile-dropdown-divider"></div>
+              <button
+                class="profile-dropdown-item danger"
+                id="menu-logout-btn"
+                type="button"
+              >
+                ↪ Logout
+              </button>
             </div>
-            <span id="question-listen-slot"></span>
-          </div>
-          <div class="opt-list" id="opt-list"></div>
-          <div class="hint-row">
-            <button class="btn btn-ghost hint-btn" id="quiz-hint-btn" type="button">💡 Hint</button>
-          </div>
-          <div class="hint-box hidden" id="hint-box"></div>
-          <div class="feedback-box hidden" id="feedback-box"></div>
-          <div class="quiz-actions">
-            <button class="btn btn-ghost" id="quiz-skip-btn" type="button">Skip question</button>
-            <button class="btn btn-primary" id="quiz-next-btn" disabled>Check answer</button>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ---------- RESULTS ---------- -->
-    <div id="view-results" class="hidden">
-      <div class="result-wrap">
-        <div class="result-summary">
-          <div class="result-ring" id="result-ring">80%</div>
-          <h2 id="result-title">Nice work!</h2>
-          <p id="result-sub">You passed Level 1 and unlocked Level 2.</p>
-          <div class="result-actions">
-            <button class="btn btn-ghost" id="review-level-btn" onclick="goLevel(currentLevel)">Review this level</button>
-            <button class="btn btn-primary" onclick="goDashboard()">Back to dashboard</button>
-            <button class="btn btn-ghost" id="print-results-btn" type="button">🖨 Print results</button>
+      <div class="shell">
+        <!-- ---------- DASHBOARD ---------- -->
+        <div id="view-dashboard">
+          <div class="dash-head">
+            <h1>Welcome back, <span id="dash-name">there</span></h1>
+            <p>Here's where your spoken English practice stands today.</p>
+            <div class="progress-file-row">
+              <button
+                class="btn btn-ghost small-btn"
+                id="export-progress-btn"
+                type="button"
+              >
+                ⬇ Export progress (JSON)
+              </button>
+              <button
+                class="btn btn-ghost small-btn"
+                id="print-dashboard-btn"
+                type="button"
+              >
+                🖨 Print dashboard
+              </button>
+            </div>
+            <p class="progress-file-note">
+              Your progress is saved on the server against your account. Export
+              any time for a personal backup file.
+            </p>
           </div>
-        </div>
-        <div class="review-section">
-          <h2>Review your answers</h2>
-          <p class="review-sub">Every question, explained — use the player to listen, pause, drag through, or restart any explanation.</p>
-          <div id="review-list"></div>
-        </div>
-      </div>
-    </div>
 
-    <!-- ---------- PROFILE ---------- -->
-    <div id="view-profile" class="hidden">
-      <div class="back-row">
-        <button class="back-link" onclick="goDashboard()">← Back to dashboard</button>
-      </div>
-      <div class="profile-shell">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:24px;">
-          <h1 style="font-size:26px;margin:0;">Your profile</h1>
-          <button class="btn btn-ghost small-btn" id="print-profile-btn" type="button">🖨 Print profile</button>
-        </div>
-
-        <div id="profile-error" class="msg-box msg-error hidden"></div>
-        <div id="profile-success" class="msg-box msg-success hidden"></div>
-
-        <div class="profile-pic-row">
-          <div class="profile-pic-preview" id="profile-pic-preview">J</div>
-          <div class="profile-pic-actions">
-            <label class="btn btn-ghost small-btn" for="profile-pic-input" style="cursor:pointer;">Change photo</label>
-            <input type="file" id="profile-pic-input" accept="image/*">
-            <button class="btn btn-ghost small-btn" id="remove-pic-btn" type="button">Remove photo</button>
-          </div>
-        </div>
-
-        <div class="field-group">
-          <label class="field-label" for="profile-name-input">Full name</label>
-          <input class="text-input" id="profile-name-input" type="text" maxlength="60">
-        </div>
-        <div class="field-group">
-          <label class="field-label" for="profile-email-input">Email (read-only)</label>
-          <input class="text-input" id="profile-email-input" type="email" disabled style="opacity:.65;">
-        </div>
-        <div class="field-group">
-          <label class="field-label" for="profile-bio-input">Short bio (optional)</label>
-          <input class="text-input" id="profile-bio-input" type="text" maxlength="300" placeholder="A line about yourself or your learning goals">
-        </div>
-        <button class="btn btn-primary" id="save-profile-btn" style="width:auto;padding-left:26px;padding-right:26px;">Save changes</button>
-
-        <div class="divider-line"></div>
-
-        <h2 style="font-size:18px;margin:0 0 16px;">Change password</h2>
-        <div class="field-group">
-          <label class="field-label" for="current-password-input">Current password</label>
-          <input class="text-input" id="current-password-input" type="password">
-        </div>
-        <div class="field-group">
-          <label class="field-label" for="new-password-input">New password</label>
-          <input class="text-input" id="new-password-input" type="password" minlength="6" placeholder="At least 6 characters">
-        </div>
-        <button class="btn btn-ghost" id="change-password-btn" style="width:auto;padding-left:26px;padding-right:26px;">Update password</button>
-      </div>
-
-      <div class="divider-line" style="max-width:900px;margin-left:auto;margin-right:auto;"></div>
-
-      <div id="profile-subjects-section" style="max-width:900px;margin:0 auto;">
-        <h2 class="section-title" id="profile-subjects-title">🏫 Your School Subjects</h2>
-        <div class="level-grid" id="profile-subject-grid"></div>
-      </div>
-    </div>
-
-    <!-- ---------- ADMIN DASHBOARD ---------- -->
-    <div id="view-admin" class="hidden">
-      <div class="admin-shell">
-        <div class="dash-head">
-          <h1>Admin dashboard</h1>
-          <p>Every student's account and progress, at a glance.</p>
-        </div>
-
-        <div class="auth-tabs" style="max-width:420px;">
-          <button class="auth-tab active" data-admin-tab="students" type="button">Students</button>
-          <button class="auth-tab" data-admin-tab="settings" type="button">Site Settings & Data</button>
-        </div>
-
-        <div class="auth-form active" data-admin-panel="students">
-          <div class="admin-stat-row">
+          <div class="stat-row">
             <div class="stat-card">
-              <div class="stat-num" id="admin-stat-total">0</div>
-              <div class="stat-label">Total students</div>
+              <div class="stat-num" id="stat-concepts">0/96</div>
+              <div class="stat-label">Concepts covered so far</div>
             </div>
             <div class="stat-card">
-              <div class="stat-num" id="admin-stat-active">0</div>
-              <div class="stat-label">Active students</div>
+              <div class="stat-num" id="stat-levels">0/4</div>
+              <div class="stat-label">Levels completed</div>
             </div>
             <div class="stat-card">
-              <div class="stat-num" id="admin-stat-terminated">0</div>
-              <div class="stat-label">Terminated students</div>
+              <div class="stat-num" id="stat-next">Level 1</div>
+              <div class="stat-label">Recommended next step</div>
             </div>
           </div>
 
-          <h2 class="admin-section-title"><span class="status-dot active"></span> Active students</h2>
-          <div class="student-grid" id="active-student-grid"></div>
-
-          <h2 class="admin-section-title"><span class="status-dot terminated"></span> Terminated students</h2>
-          <div class="student-grid" id="terminated-student-grid"></div>
-        </div>
-
-        <div class="auth-form" data-admin-panel="settings" style="max-width:640px;">
-          <div id="settings-error" class="msg-box msg-error hidden"></div>
-          <div id="settings-success" class="msg-box msg-success hidden"></div>
-
-          <h2 style="font-size:17px;margin:0 0 16px;">Branding</h2>
-          <div class="profile-pic-row">
-            <div class="profile-pic-preview" id="settings-logo-preview" style="border-radius:14px;background:var(--primary);">🏫</div>
-            <div class="profile-pic-actions">
-              <label class="btn btn-ghost small-btn" for="settings-logo-input" style="cursor:pointer;">Upload logo image</label>
-              <input type="file" id="settings-logo-input" accept="image/*">
-              <button class="btn btn-ghost small-btn" id="settings-logo-reset-btn" type="button">Reset to default icon</button>
-            </div>
-          </div>
-          <div class="field-group">
-            <label class="field-label" for="settings-title-input">Site title</label>
-            <input class="text-input" id="settings-title-input" type="text" maxlength="60" placeholder="My School">
-          </div>
-          <div class="field-group">
-            <label class="field-label" for="settings-footer-input">Footer text</label>
-            <input class="text-input" id="settings-footer-input" type="text" maxlength="300" placeholder="© 2026 My School — a day-by-day learning platform.">
-          </div>
-          <button class="btn btn-primary" id="save-settings-btn" style="width:auto;padding-left:26px;padding-right:26px;">Save branding</button>
+          <h2 class="section-title">
+            Your levels
+            <button
+              class="btn btn-ghost small-btn"
+              id="view-full-course-btn"
+              type="button"
+            >
+              📖 View Full Course
+            </button>
+          </h2>
+          <div class="level-grid" id="level-grid"></div>
 
           <div class="divider-line"></div>
 
-          <h2 style="font-size:17px;margin:0 0 12px;">Data & backup</h2>
-          <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin:0 0 16px;">
-            All data lives in a real SQLite database file (<code>db/speakpath.db</code>) on the server —
-            that's the source of truth. The button below also saves a full, human-readable JSON copy of
-            everything (every account and every bit of progress, no passwords included) to
-            <code>db/backup.json</code> on disk, and downloads it to you as well — so you always have both
-            a database and a plain JSON backup.
-          </p>
-          <button class="btn btn-ghost small-btn" id="export-all-btn" type="button">⬇ Export full database (JSON)</button>
-          <p style="font-size:12px;color:var(--ink-soft);line-height:1.6;margin:14px 0 0;">
-            To browse the raw SQLite database directly (tables, rows, everything) with a visual tool,
-            download the free, open-source <strong>DB Browser for SQLite</strong> app and open the
-            <code>db/speakpath.db</code> file from your project folder.
-          </p>
+          <div id="class-picker-card" class="class-picker-card hidden">
+            <h2 class="section-title" style="margin-bottom: 8px">
+              🏫 Choose your class
+            </h2>
+            <p
+              style="color: var(--ink-soft); font-size: 14px; margin: 0 0 16px"
+            >
+              Pick your class to see subjects and quizzes for your level.
+            </p>
+            <div class="class-btn-row" id="class-btn-row"></div>
+          </div>
+
+          <div id="subjects-section" class="hidden">
+            <div class="subjects-header-row">
+              <h2 class="section-title" style="margin-bottom: 4px">
+                🏫 Class <span id="subjects-class-label">3</span> — School
+                Subjects
+              </h2>
+              <button
+                class="btn btn-ghost small-btn"
+                id="change-class-btn"
+                type="button"
+              >
+                Change class
+              </button>
+            </div>
+            <div class="search-bar-row">
+              <input
+                class="text-input search-input"
+                id="subject-search-input"
+                type="text"
+                placeholder="🔍 Search your subjects, topics, or progress..."
+              />
+            </div>
+            <div class="level-grid" id="subject-grid"></div>
+          </div>
+        </div>
+
+        <!-- ---------- LEVEL DETAIL ---------- -->
+        <div id="view-level" class="hidden test">
+          <div class="back-row">
+            <button class="back-link" onclick="goDashboard()">
+              ← Back to dashboard
+            </button>
+          </div>
+          <div class="level-header">
+            <div class="lv-tag" id="lv-tag">LEVEL 1</div>
+            <h1 id="lv-title">Foundations for Speaking</h1>
+            <p id="lv-desc"></p>
+          </div>
+          <div class="day-sections" id="day-sections"></div>
+          <div class="quiz-cta-card">
+            <div>
+              <h3>Ready to test yourself?</h3>
+              <p id="quiz-cta-desc">
+                A short quiz on everything in this level. Score 70% or higher to
+                unlock the next level.
+              </p>
+            </div>
+            <button class="btn btn-accent" id="start-quiz-btn">
+              Take the quiz
+            </button>
+          </div>
+        </div>
+
+        <!-- ---------- FULL COURSE ACCORDION (all levels in one view) ---------- -->
+        <div id="view-course" class="hidden">
+          <div class="back-row">
+            <button class="back-link" onclick="goDashboard()">
+              ← Back to dashboard
+            </button>
+          </div>
+          <div class="level-header">
+            <h1>English Learning Course</h1>
+            <p>
+              Every level, every day, every topic — all in one place. Click a
+              level to expand it.
+            </p>
+          </div>
+          <div id="course-accordion"></div>
+        </div>
+
+        <!-- ---------- QUIZ ---------- -->
+        <div id="view-quiz" class="hidden">
+          <div class="quiz-wrap">
+            <div class="back-row">
+              <button
+                class="back-link"
+                id="quiz-back-btn"
+                onclick="goLevel(currentLevel)"
+              >
+                ← Back to level
+              </button>
+            </div>
+            <div class="quiz-progress">
+              <span class="quiz-progress-label" id="quiz-progress-label"
+                >Question 1 of 7</span
+              >
+              <div class="quiz-progress-track">
+                <div
+                  class="quiz-progress-fill"
+                  id="quiz-progress-fill"
+                  style="width: 14%"
+                ></div>
+              </div>
+            </div>
+            <div class="q-card">
+              <div
+                style="
+                  display: flex;
+                  align-items: flex-start;
+                  justify-content: space-between;
+                  gap: 14px;
+                  margin-bottom: 22px;
+                  flex-wrap: wrap;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 12px;
+                    min-width: 0;
+                  "
+                >
+                  <span class="q-number-badge" id="q-number-badge">Q1</span>
+                  <p class="q-text" id="q-text"></p>
+                </div>
+                <span id="question-listen-slot"></span>
+              </div>
+              <div class="opt-list" id="opt-list"></div>
+              <div class="hint-row">
+                <button
+                  class="btn btn-ghost hint-btn"
+                  id="quiz-hint-btn"
+                  type="button"
+                >
+                  💡 Hint
+                </button>
+              </div>
+              <div class="hint-box hidden" id="hint-box"></div>
+              <div class="feedback-box hidden" id="feedback-box"></div>
+              <div class="quiz-actions">
+                <button class="btn btn-ghost" id="quiz-skip-btn" type="button">
+                  Skip question
+                </button>
+                <button class="btn btn-primary" id="quiz-next-btn" disabled>
+                  Check answer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------- RESULTS ---------- -->
+        <div id="view-results" class="hidden">
+          <div class="result-wrap">
+            <div class="result-summary">
+              <div class="result-ring" id="result-ring">80%</div>
+              <h2 id="result-title">Nice work!</h2>
+              <p id="result-sub">You passed Level 1 and unlocked Level 2.</p>
+              <div class="result-actions">
+                <button
+                  class="btn btn-ghost"
+                  id="review-level-btn"
+                  onclick="goLevel(currentLevel)"
+                >
+                  Review this level
+                </button>
+                <button class="btn btn-primary" onclick="goDashboard()">
+                  Back to dashboard
+                </button>
+                <button
+                  class="btn btn-ghost"
+                  id="print-results-btn"
+                  type="button"
+                >
+                  🖨 Print results
+                </button>
+              </div>
+            </div>
+            <div class="review-section">
+              <h2>Review your answers</h2>
+              <p class="review-sub">
+                Every question, explained — use the player to listen, pause,
+                drag through, or restart any explanation.
+              </p>
+              <div id="review-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------- PROFILE ---------- -->
+        <div id="view-profile" class="hidden">
+          <div class="back-row">
+            <button class="back-link" onclick="goDashboard()">
+              ← Back to dashboard
+            </button>
+          </div>
+          <div class="profile-shell">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                flex-wrap: wrap;
+                margin-bottom: 24px;
+              "
+            >
+              <h1 style="font-size: 26px; margin: 0">Your profile</h1>
+              <button
+                class="btn btn-ghost small-btn"
+                id="print-profile-btn"
+                type="button"
+              >
+                🖨 Print profile
+              </button>
+            </div>
+
+            <div id="profile-error" class="msg-box msg-error hidden"></div>
+            <div id="profile-success" class="msg-box msg-success hidden"></div>
+
+            <div class="profile-pic-row">
+              <div class="profile-pic-preview" id="profile-pic-preview">J</div>
+              <div class="profile-pic-actions">
+                <label
+                  class="btn btn-ghost small-btn"
+                  for="profile-pic-input"
+                  style="cursor: pointer"
+                  >Change photo</label
+                >
+                <input type="file" id="profile-pic-input" accept="image/*" />
+                <button
+                  class="btn btn-ghost small-btn"
+                  id="remove-pic-btn"
+                  type="button"
+                >
+                  Remove photo
+                </button>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="profile-name-input"
+                >Full name</label
+              >
+              <input
+                class="text-input"
+                id="profile-name-input"
+                type="text"
+                maxlength="60"
+              />
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="profile-email-input"
+                >Email (read-only)</label
+              >
+              <input
+                class="text-input"
+                id="profile-email-input"
+                type="email"
+                disabled
+                style="opacity: 0.65"
+              />
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="profile-bio-input"
+                >Short bio (optional)</label
+              >
+              <input
+                class="text-input"
+                id="profile-bio-input"
+                type="text"
+                maxlength="300"
+                placeholder="A line about yourself or your learning goals"
+              />
+            </div>
+            <button
+              class="btn btn-primary"
+              id="save-profile-btn"
+              style="width: auto; padding-left: 26px; padding-right: 26px"
+            >
+              Save changes
+            </button>
+
+            <div class="divider-line"></div>
+
+            <h2 style="font-size: 18px; margin: 0 0 16px">Change password</h2>
+            <div class="field-group">
+              <label class="field-label" for="current-password-input"
+                >Current password</label
+              >
+              <input
+                class="text-input"
+                id="current-password-input"
+                type="password"
+              />
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="new-password-input"
+                >New password</label
+              >
+              <input
+                class="text-input"
+                id="new-password-input"
+                type="password"
+                minlength="6"
+                placeholder="At least 6 characters"
+              />
+            </div>
+            <button
+              class="btn btn-ghost"
+              id="change-password-btn"
+              style="width: auto; padding-left: 26px; padding-right: 26px"
+            >
+              Update password
+            </button>
+          </div>
+
+          <div
+            class="divider-line"
+            style="max-width: 900px; margin-left: auto; margin-right: auto"
+          ></div>
+
+          <div
+            id="profile-subjects-section"
+            style="max-width: 900px; margin: 0 auto"
+          >
+            <h2 class="section-title" id="profile-subjects-title">
+              🏫 Your School Subjects
+            </h2>
+            <div class="level-grid" id="profile-subject-grid"></div>
+          </div>
+        </div>
+
+        <!-- ---------- ADMIN DASHBOARD ---------- -->
+        <div id="view-admin" class="hidden">
+          <div class="admin-shell">
+            <div class="dash-head">
+              <h1>Admin dashboard</h1>
+              <p>Every student's account and progress, at a glance.</p>
+            </div>
+
+            <div class="auth-tabs" style="max-width: 420px">
+              <button
+                class="auth-tab active"
+                data-admin-tab="students"
+                type="button"
+              >
+                Students
+              </button>
+              <button class="auth-tab" data-admin-tab="settings" type="button">
+                Site Settings & Data
+              </button>
+            </div>
+
+            <div class="auth-form active" data-admin-panel="students">
+              <div class="admin-stat-row">
+                <div class="stat-card">
+                  <div class="stat-num" id="admin-stat-total">0</div>
+                  <div class="stat-label">Total students</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-num" id="admin-stat-active">0</div>
+                  <div class="stat-label">Active students</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-num" id="admin-stat-terminated">0</div>
+                  <div class="stat-label">Terminated students</div>
+                </div>
+              </div>
+
+              <h2 class="admin-section-title">
+                <span class="status-dot active"></span> Active students
+              </h2>
+              <div class="student-grid" id="active-student-grid"></div>
+
+              <h2 class="admin-section-title">
+                <span class="status-dot terminated"></span> Terminated students
+              </h2>
+              <div class="student-grid" id="terminated-student-grid"></div>
+            </div>
+
+            <div
+              class="auth-form"
+              data-admin-panel="settings"
+              style="max-width: 640px"
+            >
+              <div id="settings-error" class="msg-box msg-error hidden"></div>
+              <div
+                id="settings-success"
+                class="msg-box msg-success hidden"
+              ></div>
+
+              <h2 style="font-size: 17px; margin: 0 0 16px">Branding</h2>
+              <div class="profile-pic-row">
+                <div
+                  class="profile-pic-preview"
+                  id="settings-logo-preview"
+                  style="border-radius: 14px; background: var(--primary)"
+                >
+                  🏫
+                </div>
+                <div class="profile-pic-actions">
+                  <label
+                    class="btn btn-ghost small-btn"
+                    for="settings-logo-input"
+                    style="cursor: pointer"
+                    >Upload logo image</label
+                  >
+                  <input
+                    type="file"
+                    id="settings-logo-input"
+                    accept="image/*"
+                  />
+                  <button
+                    class="btn btn-ghost small-btn"
+                    id="settings-logo-reset-btn"
+                    type="button"
+                  >
+                    Reset to default icon
+                  </button>
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="settings-title-input"
+                  >Site title</label
+                >
+                <input
+                  class="text-input"
+                  id="settings-title-input"
+                  type="text"
+                  maxlength="60"
+                  placeholder="My School"
+                />
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="settings-footer-input"
+                  >Footer text</label
+                >
+                <input
+                  class="text-input"
+                  id="settings-footer-input"
+                  type="text"
+                  maxlength="300"
+                  placeholder="© 2026 My School — a day-by-day learning platform."
+                />
+              </div>
+              <button
+                class="btn btn-primary"
+                id="save-settings-btn"
+                style="width: auto; padding-left: 26px; padding-right: 26px"
+              >
+                Save branding
+              </button>
+
+              <div class="divider-line"></div>
+
+              <h2 style="font-size: 17px; margin: 0 0 12px">Data & backup</h2>
+              <p
+                style="
+                  font-size: 13px;
+                  color: var(--ink-soft);
+                  line-height: 1.6;
+                  margin: 0 0 16px;
+                "
+              >
+                All data lives in a real SQLite database file
+                (<code>db/speakpath.db</code>) on the server — that's the source
+                of truth. The button below also saves a full, human-readable
+                JSON copy of everything (every account and every bit of
+                progress, no passwords included) to
+                <code>db/backup.json</code> on disk, and downloads it to you as
+                well — so you always have both a database and a plain JSON
+                backup.
+              </p>
+              <button
+                class="btn btn-ghost small-btn"
+                id="export-all-btn"
+                type="button"
+              >
+                ⬇ Export full database (JSON)
+              </button>
+              <p
+                style="
+                  font-size: 12px;
+                  color: var(--ink-soft);
+                  line-height: 1.6;
+                  margin: 14px 0 0;
+                "
+              >
+                To browse the raw SQLite database directly (tables, rows,
+                everything) with a visual tool, download the free, open-source
+                <strong>DB Browser for SQLite</strong> app and open the
+                <code>db/speakpath.db</code> file from your project folder.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
+
+      <footer class="app-footer" id="app-footer-text">
+        © 2026 My School — a day-by-day learning platform.
+      </footer>
     </div>
 
-  </div>
+    <!-- ---------- ADMIN: student detail modal ---------- -->
+    <div id="student-detail-backdrop" class="student-detail-backdrop hidden">
+      <div class="student-detail-panel" id="student-detail-panel"></div>
+    </div>
 
-  <footer class="app-footer" id="app-footer-text">
-    © 2026 My School — a day-by-day learning platform.
-  </footer>
-</div>
+    <!-- ---------- Mythology variant picker modal ---------- -->
+    <div id="variant-picker-backdrop" class="student-detail-backdrop hidden">
+      <div
+        class="student-detail-panel"
+        style="max-width: 440px; text-align: center"
+      >
+        <h2 style="font-size: 19px; margin: 0 0 4px" id="subject-modal-title">
+          Set up your quiz
+        </h2>
+        <p
+          style="color: var(--ink-soft); font-size: 13.5px; margin: 0 0 20px"
+          id="subject-modal-sub"
+        >
+          Choose your options below.
+        </p>
 
-<!-- ---------- ADMIN: student detail modal ---------- -->
-<div id="student-detail-backdrop" class="student-detail-backdrop hidden">
-  <div class="student-detail-panel" id="student-detail-panel"></div>
-</div>
+        <div id="variant-step" class="hidden">
+          <p class="field-label" style="text-align: left">Choose your epic</p>
+          <div
+            style="
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              justify-content: center;
+              margin-bottom: 20px;
+            "
+          >
+            <button
+              class="btn btn-ghost variant-choice-btn"
+              data-variant="ramayana"
+              style="flex: 1; min-width: 130px"
+            >
+              📜 Ramayana
+            </button>
+            <button
+              class="btn btn-ghost variant-choice-btn"
+              data-variant="mahabharata"
+              style="flex: 1; min-width: 130px"
+            >
+              📜 Mahabharata
+            </button>
+          </div>
+        </div>
 
-<!-- ---------- Mythology variant picker modal ---------- -->
-<div id="variant-picker-backdrop" class="student-detail-backdrop hidden">
-  <div class="student-detail-panel" style="max-width:440px;text-align:center;">
-    <h2 style="font-size:19px;margin:0 0 4px;" id="subject-modal-title">Set up your quiz</h2>
-    <p style="color:var(--ink-soft);font-size:13.5px;margin:0 0 20px;" id="subject-modal-sub">Choose your options below.</p>
+        <div id="difficulty-step stepTest">
+          <p class="field-label" style="text-align: left">
+            Choose your level (CBSE stage)
+          </p>
+          <div
+            style="
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              justify-content: center;
+              margin-bottom: 22px;
+            "
+          >
+            <button
+              class="btn btn-ghost difficulty-choice-btn"
+              data-difficulty="basic"
+              style="flex: 1; min-width: 120px"
+            >
+              🟢 Primary<br /><span style="font-size: 11px; font-weight: 400"
+                >Class 3–5</span
+              >
+            </button>
+            <button
+              class="btn btn-ghost difficulty-choice-btn"
+              data-difficulty="medium"
+              style="flex: 1; min-width: 120px"
+            >
+              🟡 Middle<br /><span style="font-size: 11px; font-weight: 400"
+                >Class 6–8</span
+              >
+            </button>
+            <button
+              class="btn btn-ghost difficulty-choice-btn"
+              data-difficulty="hard"
+              style="flex: 1; min-width: 120px"
+            >
+              🔴 Secondary<br /><span style="font-size: 11px; font-weight: 400"
+                >Class 9–10</span
+              >
+            </button>
+          </div>
+        </div>
 
-    <div id="variant-step" class="hidden">
-      <p class="field-label" style="text-align:left;">Choose your epic</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:20px;">
-        <button class="btn btn-ghost variant-choice-btn" data-variant="ramayana" style="flex:1;min-width:130px;">📜 Ramayana</button>
-        <button class="btn btn-ghost variant-choice-btn" data-variant="mahabharata" style="flex:1;min-width:130px;">📜 Mahabharata</button>
+        <button
+          class="btn btn-primary"
+          id="subject-start-btn"
+          style="width: 100%"
+          disabled
+        >
+          Start Quiz
+        </button>
+        <button
+          class="btn btn-ghost small-btn"
+          id="variant-cancel-btn"
+          style="margin-top: 12px"
+        >
+          Cancel
+        </button>
       </div>
     </div>
 
-    <div id="difficulty-step">
-      <p class="field-label" style="text-align:left;">Choose your level (CBSE stage)</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:22px;">
-        <button class="btn btn-ghost difficulty-choice-btn" data-difficulty="basic" style="flex:1;min-width:120px;">🟢 Primary<br><span style="font-size:11px;font-weight:400;">Class 3–5</span></button>
-        <button class="btn btn-ghost difficulty-choice-btn" data-difficulty="medium" style="flex:1;min-width:120px;">🟡 Middle<br><span style="font-size:11px;font-weight:400;">Class 6–8</span></button>
-        <button class="btn btn-ghost difficulty-choice-btn" data-difficulty="hard" style="flex:1;min-width:120px;">🔴 Secondary<br><span style="font-size:11px;font-weight:400;">Class 9–10</span></button>
-      </div>
-    </div>
-
-    <button class="btn btn-primary" id="subject-start-btn" style="width:100%;" disabled>Start Quiz</button>
-    <button class="btn btn-ghost small-btn" id="variant-cancel-btn" style="margin-top:12px;">Cancel</button>
-  </div>
-</div>
-
-<script src="js/content.js"></script>
-<script src="js/subjects.js"></script>
-<script src="js/speech.js"></script>
-<script src="js/app.js"></script>
-</body>
+    <script src="js/content.js"></script>
+    <script src="js/subjects.js"></script>
+    <script src="js/speech.js"></script>
+    <script src="js/app.js"></script>
+  </body>
 </html>
